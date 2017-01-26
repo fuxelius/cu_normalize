@@ -11,8 +11,6 @@
 // kompilera
 // nvcc main.cu gps2arc.cu kinetics.cu -o normalize -lsqlite3
 
-
-
 int main(int argc, char *argv[]) {
     char buffer_Z[100];  // string buffer
 
@@ -34,26 +32,23 @@ int main(int argc, char *argv[]) {
 
     kinetics2record(buffer_Z, &mag_table, &kinetics_len);
 
-    for (int row_cnt=0; row_cnt<kinetics_len; row_cnt++) {
-        printf(">> %u | ",mag_table[row_cnt].seq_id);
-        printf("%f | ",mag_table[row_cnt].mxt);
-        printf("%f\n",mag_table[row_cnt].myt);
-    }
+    // for (int row_cnt=0; row_cnt<kinetics_len; row_cnt++) {
+    //     printf(">> %u | ",mag_table[row_cnt].seq_id);
+    //     printf("%f | ",mag_table[row_cnt].mxt);
+    //     printf("%f\n",mag_table[row_cnt].myt);
+    // }
 
     gps2arc_record(buffer_Z, &arc_table, &arc_len, &mag_table, &kinetics_len);
+
+
+    puts("Can not hold me back");
 
     for (int rec_cnt=0; rec_cnt<arc_len; rec_cnt++) {
         printf("++->%u | %u | %u | ",rec_cnt, arc_table[rec_cnt].left_seq_id, arc_table[rec_cnt].right_seq_id);
         printf("%u | %u \n", arc_table[rec_cnt].left_mag_idx, arc_table[rec_cnt].right_mag_idx);
     }
 
-    printf("length fux %u \n\n",kinetics_len);
-
-    // printf("%u | ",magtable[555].seq_id);
-    // printf("%f | ",magtable[555].mxt);
-    // printf("%f\n",magtable[555].myt);
-
-
+    //printf("length fux %u \n\n",kinetics_len);
 
     return 0;
 

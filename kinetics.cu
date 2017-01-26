@@ -31,7 +31,7 @@ int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_
 
     while (sqlite3_step(res) == SQLITE_ROW) {
         *kinetics_len = sqlite3_column_int(res, 0);
-        printf("%u|\n", *kinetics_len);
+        // printf("%u|\n", *kinetics_len);
     }
 
     struct mag_record *new_table = (struct mag_record*) malloc((*kinetics_len) * sizeof(struct mag_record));
@@ -54,16 +54,16 @@ int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_
         new_table[row_cnt].myt = sqlite3_column_double(res, 2);
         new_table[row_cnt].outlier = 0;
 
-        printf("%u | ",new_table[row_cnt].seq_id);
-        printf("%f | ",new_table[row_cnt].mxt);
-        printf("%f\n",new_table[row_cnt].myt);
+        // printf("%u | ",new_table[row_cnt].seq_id);
+        // printf("%f | ",new_table[row_cnt].mxt);
+        // printf("%f\n",new_table[row_cnt].myt);
 
         row_cnt++;
     }
 
-    puts("==========================");
-
-    printf("We received %d records.\n", *kinetics_len);
+    // puts("==========================");
+    //
+    // printf("We received %d records.\n", *kinetics_len);
 
     sqlite3_finalize(res);
 

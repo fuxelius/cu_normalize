@@ -36,8 +36,8 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     while (sqlite3_step(res) == SQLITE_ROW) {
         gps_cnt = sqlite3_column_int(res, 0);
         *arc_len = gps_cnt - 1;
-        printf("gps_cnt %u\n", gps_cnt);
-        printf("arc_len %u\n", *arc_len);
+        //printf("gps_cnt %u\n", gps_cnt);
+        //printf("arc_len %u\n", *arc_len);
     }
 
     struct arc_record *new_table = (struct arc_record*) malloc((*arc_len) * sizeof(struct arc_record));
@@ -56,41 +56,41 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     int seq_id_prev; // Previous seq_id value
 
     // An array that holds all index to arcs in mag_table
-    int *arc_idx = (int*) malloc((*arc_len) * 2 * sizeof(int));  // <-----------------------------------------------
-    int arc_cnt2 = 0; // Counter for arc_idx array         // <-----------------------------------------------
+    int *arc_idx = (int*) malloc((*arc_len) * 2 * sizeof(int) + 1);  // <------ lägger till en extra arc_idx[arc_cnt2] efter sista gps
+    int arc_cnt2 = 0; // Counter for arc_idx array
 
     int row_cnt = 0;
     while (sqlite3_step(res) == SQLITE_ROW) {
         seq_id = sqlite3_column_int(res, 0);
         sprintf(token,"%s", sqlite3_column_text(res, 1));
 
-        printf("%u | ",seq_id);
-        printf("%s | \n", token);
+        //printf("%u | ",seq_id);
+        //printf("%s | \n", token);
 
         //implement state machine and populates arc_table
         if (state == 0 && (strcmp("kinetics", token) == 0)) {
-            printf("-----> A %s | \n", token);
+            //printf("-----> A %s | \n", token);
 
             state = 0;
             continue;
         }
 
         if (state == 0 && (strcmp("gps", token) == 0)) {
-            printf("-----> B %s | \n", token);
+            //printf("-----> B %s | \n", token);
 
             state = 1;
             continue;
         }
 
         if (state == 1 && (strcmp("gps", token) == 0)) {
-            printf("-----> C %s | \n", token);
+            //printf("-----> C %s | \n", token);
 
             state = 0;
             continue;
         }
 
         if (state == 1 && (strcmp("kinetics", token) == 0)) {
-            printf("-----> D LEFT %s | %u\n", token, seq_id);
+            //printf("-----> D LEFT %s | %u\n", token, seq_id);
 
             new_table[arc_cnt].left_seq_id = seq_id;
             seq_id_prev = seq_id;
@@ -103,7 +103,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         }
 
         if (state == 2 && (strcmp("kinetics", token) == 0)) {
-            printf("-----> E %s | \n", token);
+            //printf("-----> E %s | \n", token);
 
             seq_id_prev = seq_id;
 
@@ -112,7 +112,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         }
 
         if (state == 2 && (strcmp("gps", token) == 0)) {
-            printf("-----> F RIGHT %s |%u\n", token, seq_id_prev);
+            //printf("-----> F RIGHT %s |%u\n", token, seq_id_prev);
 
             new_table[arc_cnt].right_seq_id = seq_id_prev;
             arc_cnt++;
@@ -128,31 +128,34 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     }
 
     // DEBUG: print all indexes to arc_table
-    for (int i=0; i < (2 * (*arc_len)); i++) {
-        printf("::::: %u %u \n", i, arc_idx[i]);
-    }
+    // for (int i=0; i < (2 * (*arc_len)); i++) {
+    //     printf("::::: %u %u \n", i, arc_idx[i]);
+    // }
 
     int forward = 0; // shifts one step forward for each idx found in arc_idx
     // Find all indexes for an arc into the mag_table
     for(int idx=0; idx < *mag_len; idx++) {
-        printf(">>>>> %u %u \n", idx, (*mag_table)[idx].seq_id);
+
+        //printf(">>>>> %u %u \n", idx, (*mag_table)[idx].seq_id);
+        //puts(".");
+
         if ((forward < (2 * (*arc_len))) && (arc_idx[forward] == (*mag_table)[idx].seq_id)) {
-            printf("::::: ----->%u %u %u \n", forward, idx, (*mag_table)[idx].seq_id);
+            // printf("::::: ----->%u %u %u \n", forward, idx, (*mag_table)[idx].seq_id);
 
             if ((forward % 2) == 0) { // idx is even, modulo operator
                 new_table[forward/2].left_mag_idx = idx;
-                printf("&&&&&&>%u %u left\n", forward/2, idx);
+                // printf("&&&&&&>%u %u left\n", forward/2, idx);
             }
             else {
                 new_table[forward/2].right_mag_idx = idx;
-                printf("&&&&&&>%u %u right\n", forward/2 , idx);
+                // printf("&&&&&&>%u %u right\n", forward/2 , idx);
             }
 
             forward++;
         }
     }
 
-    //free(arc_idx); // <-------*** Error in `./cu_normalize11': double free or corruption (!prev): 0x00000000008c7060 ***
+    free(arc_idx); // <-------*** Error in `./cu_normalize11': double free or corruption (!prev): 0x00000000008c7060 ***
 
     sqlite3_finalize(res);
 
