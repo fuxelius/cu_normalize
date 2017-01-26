@@ -31,7 +31,9 @@ int main(int argc, char *argv[]) {
 
     sprintf(buffer_Z,"%s",argv[1]);   // *.sqlite3
 
+    // Reads in magnetometer data from database to magtable and the tables length
     kinetics2record(buffer_Z, &mag_table, &kinetics_len);
+
 
     // for (int row_cnt=0; row_cnt<kinetics_len; row_cnt++) {
     //     printf(">> %u | ",mag_table[row_cnt].seq_id);
@@ -39,15 +41,30 @@ int main(int argc, char *argv[]) {
     //     printf("%f\n",mag_table[row_cnt].myt);
     // }
 
+
+    // Creates an arc_table which is a partitioning of mxt, myt between gps positions
+    // arc_table[].left_mag_idx and arc_table[].right_mag_idx points out each arcs border
+    // These arcs partition the entire mag_table
     gps2arc_record(buffer_Z, &arc_table, &arc_len, &mag_table, &kinetics_len);
 
 
-    puts("Can not hold me back");
 
-    for (int rec_cnt=0; rec_cnt<arc_len; rec_cnt++) {
-        printf("++->%u | %u | %u | ",rec_cnt, arc_table[rec_cnt].left_seq_id, arc_table[rec_cnt].right_seq_id);
-        printf("%u | %u \n", arc_table[rec_cnt].left_mag_idx, arc_table[rec_cnt].right_mag_idx);
-    }
+    #ifdef DEBUG_INFO_1
+        // Proves that the pointers are correct in arc_table
+        puts("seqid | seqid | mag_idx | mag_idx | seqid | seqid");
+
+        int left_idx, right_idx;
+        for (int rec_cnt=0; rec_cnt<arc_len; rec_cnt++) {
+            printf("++-> %u | %u | %u |",rec_cnt, arc_table[rec_cnt].left_seq_id, arc_table[rec_cnt].right_seq_id);
+            printf(" %u | %u | ", arc_table[rec_cnt].left_mag_idx, arc_table[rec_cnt].right_mag_idx);
+
+            left_idx = arc_table[rec_cnt].left_mag_idx;
+            right_idx = arc_table[rec_cnt].right_mag_idx;
+
+            printf("%u | %u \n", mag_table[left_idx].seq_id, mag_table[right_idx].seq_id);
+
+        }
+    #endif
 
     //printf("length fux %u \n\n",kinetics_len);
 

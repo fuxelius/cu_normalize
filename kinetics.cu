@@ -47,7 +47,7 @@ int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_
     row_cnt = 0;
     while (sqlite3_step(res) == SQLITE_ROW) {
         //printf("%u | ", sqlite3_column_int(res, 0));
-        //printf("%f | ",  (float)sqlite3_column_double(res, 1));  // dessa bör castas till CUDA single precision
+        //printf("%f | ",  (float)sqlite3_column_double(res, 1));  // dessa bör castas till CUDA single precision = float????
         //printf("%f\n", (float)sqlite3_column_double(res, 2)); // dessa bör castas till CUDA single precision
 
         new_table[row_cnt].seq_id = sqlite3_column_int(res, 0);
