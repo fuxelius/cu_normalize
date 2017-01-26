@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 
 #include "struct.h"
+#include "makros.h"
 
 // Load sqlite database table sql and kinetics to record in memory
 int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len) {
@@ -56,41 +57,51 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     int seq_id_prev; // Previous seq_id value
 
     // An array that holds all index to arcs in mag_table
-    int *arc_idx = (int*) malloc((*arc_len) * 2 * sizeof(int) + 1);  // <------ lägger till en extra arc_idx[arc_cnt2] efter sista gps
-    int arc_cnt2 = 0; // Counter for arc_idx array
+    int *arc_idx = (int*) malloc((*arc_len) * 2 * sizeof(int) + 1);  // <------ lägger till +1 extra arc_idx[arc_cnt2] som dyker upp efter sista gps som left_ptr
+    int arc_cnt2 = 0; // Counter for arc_idx array                               '-----> D LEFT kinetics | 3346'
 
     int row_cnt = 0;
     while (sqlite3_step(res) == SQLITE_ROW) {
         seq_id = sqlite3_column_int(res, 0);
         sprintf(token,"%s", sqlite3_column_text(res, 1));
 
-        //printf("%u | ",seq_id);
-        //printf("%s | \n", token);
+        #ifdef DEBUG_INFO
+            printf("%u | ",seq_id);
+            printf("%s | \n", token);
+        #endif
 
         //implement state machine and populates arc_table
         if (state == 0 && (strcmp("kinetics", token) == 0)) {
-            //printf("-----> A %s | \n", token);
+            #ifdef DEBUG_INFO
+                printf("-----> A %s | \n", token);
+            #endif
 
             state = 0;
             continue;
         }
 
         if (state == 0 && (strcmp("gps", token) == 0)) {
-            //printf("-----> B %s | \n", token);
+            #ifdef DEBUG_INFO
+                printf("-----> B %s | \n", token);
+            #endif
 
             state = 1;
             continue;
         }
 
         if (state == 1 && (strcmp("gps", token) == 0)) {
-            //printf("-----> C %s | \n", token);
+            #ifdef DEBUG_INFO
+                printf("-----> C %s | \n", token);
+            #endif
 
             state = 0;
             continue;
         }
 
         if (state == 1 && (strcmp("kinetics", token) == 0)) {
-            //printf("-----> D LEFT %s | %u\n", token, seq_id);
+            #ifdef DEBUG_INFO
+                printf("-----> D LEFT %s | %u\n", token, seq_id);
+            #endif
 
             new_table[arc_cnt].left_seq_id = seq_id;
             seq_id_prev = seq_id;
@@ -103,7 +114,9 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         }
 
         if (state == 2 && (strcmp("kinetics", token) == 0)) {
-            //printf("-----> E %s | \n", token);
+            #ifdef DEBUG_INFO
+                printf("-----> E %s | \n", token);
+            #endif
 
             seq_id_prev = seq_id;
 
@@ -112,7 +125,10 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         }
 
         if (state == 2 && (strcmp("gps", token) == 0)) {
-            //printf("-----> F RIGHT %s |%u\n", token, seq_id_prev);
+
+            #ifdef DEBUG_INFO
+                printf("-----> F RIGHT %s |%u\n", token, seq_id_prev);
+            #endif
 
             new_table[arc_cnt].right_seq_id = seq_id_prev;
             arc_cnt++;
@@ -136,19 +152,29 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     // Find all indexes for an arc into the mag_table
     for(int idx=0; idx < *mag_len; idx++) {
 
-        //printf(">>>>> %u %u \n", idx, (*mag_table)[idx].seq_id);
-        //puts(".");
+        #ifdef DEBUG_INFO
+            printf(">>>>> %u %u \n", idx, (*mag_table)[idx].seq_id);
+        #endif
 
         if ((forward < (2 * (*arc_len))) && (arc_idx[forward] == (*mag_table)[idx].seq_id)) {
-            // printf("::::: ----->%u %u %u \n", forward, idx, (*mag_table)[idx].seq_id);
+
+            #ifdef DEBUG_INFO
+                printf("::::: ----->%u %u %u \n", forward, idx, (*mag_table)[idx].seq_id);
+            #endif
 
             if ((forward % 2) == 0) { // idx is even, modulo operator
                 new_table[forward/2].left_mag_idx = idx;
-                // printf("&&&&&&>%u %u left\n", forward/2, idx);
+
+                #ifdef DEBUG_INFO
+                    printf("&&&&&&>%u %u left\n", forward/2, idx);
+                #endif
             }
             else {
                 new_table[forward/2].right_mag_idx = idx;
-                // printf("&&&&&&>%u %u right\n", forward/2 , idx);
+
+                #ifdef DEBUG_INFO
+                  printf("&&&&&&>%u %u right\n", forward/2 , idx);
+                #endif
             }
 
             forward++;

@@ -7,6 +7,7 @@
 #include "struct.h"
 #include "gps2arc.h"
 #include "kinetics.h"
+#include "makros.h"
 
 // kompilera
 // nvcc main.cu gps2arc.cu kinetics.cu -o normalize -lsqlite3

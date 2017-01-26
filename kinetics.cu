@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 
 #include "struct.h"
+#include "makros.h"
 
 // Load sqlite database table kinetics to record in memory
 int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_len) {
