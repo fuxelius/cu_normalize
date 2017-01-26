@@ -1,94 +1,9 @@
+
 #include <stdio.h>
 #include <stdint.h>
 #include <sqlite3.h>
 
-// kompilera
-// nvcc cu_normalize.cu -o cu_normalize -lsqlite3
-
-typedef struct mag_record {  // Magnetometer data implement as an array of structs
-    int seq_id;
-    float mxt;    // CUDA single precision
-    float myt;    // CUDA single precision
-    bool outlier; // Set outliers to 1 otherwise 0
-} helu;
-
-typedef struct arc_record {  // Magnetometer data implement as an array of structs
-    int left_seq_id;  // överflödig ..
-    int right_seq_id; // överflödig ..
-    int left_mag_idx;  //left index of an arc in mag_record[]
-    int right_mag_idx; //right index of an arc in mag_record[]
-    // More data associated with an arc
-} helu2;
-
-// Load sqlite database table kinetics to record in memory
-int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_len) {
-    sqlite3 *conn;
-    sqlite3_stmt *res;
-    int error = 0;
-    const char *errMSG;
-    const char *tail;
-
-    //int kinetics_len;          // The length of the kinetics table
-    int row_cnt;
-
-    error = sqlite3_open(db_name, &conn);
-    if (error) {
-        puts("Can not open database");
-        exit(0);
-    }
-
-    error = sqlite3_prepare_v2(conn,"SELECT count(seq_id) FROM kinetics",1000, &res, &tail);
-
-    if (error != SQLITE_OK) {
-        puts("We did not get any data!");
-        exit(0);
-    }
-
-    while (sqlite3_step(res) == SQLITE_ROW) {
-        *kinetics_len = sqlite3_column_int(res, 0);
-        printf("%u|\n", *kinetics_len);
-    }
-
-    struct mag_record *new_table = (struct mag_record*) malloc((*kinetics_len) * sizeof(struct mag_record));
-
-    error = sqlite3_prepare_v2(conn,"SELECT seq_id, mxt, myt FROM kinetics ORDER BY seq_id",1000, &res, &tail);
-
-    if (error != SQLITE_OK) {
-        puts("We did not get any data!");
-        exit(0);
-    }
-
-    row_cnt = 0;
-    while (sqlite3_step(res) == SQLITE_ROW) {
-        //printf("%u | ", sqlite3_column_int(res, 0));
-        //printf("%f | ",  (float)sqlite3_column_double(res, 1));  // dessa bör castas till CUDA single precision
-        //printf("%f\n", (float)sqlite3_column_double(res, 2)); // dessa bör castas till CUDA single precision
-
-        new_table[row_cnt].seq_id = sqlite3_column_int(res, 0);
-        new_table[row_cnt].mxt = sqlite3_column_double(res, 1);
-        new_table[row_cnt].myt = sqlite3_column_double(res, 2);
-        new_table[row_cnt].outlier = 0;
-
-        printf("%u | ",new_table[row_cnt].seq_id);
-        printf("%f | ",new_table[row_cnt].mxt);
-        printf("%f\n",new_table[row_cnt].myt);
-
-        row_cnt++;
-    }
-
-    puts("==========================");
-
-    printf("We received %d records.\n", *kinetics_len);
-
-    sqlite3_finalize(res);
-
-    sqlite3_close(conn);
-
-    *mag_table = new_table;
-
-    return 0;
-}
-
+#include "struct.h"
 
 // Load sqlite database table sql and kinetics to record in memory
 int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len) {
@@ -246,51 +161,4 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     *arc_table = new_table;
 
     return 0;
-}
-
-
-int main(int argc, char *argv[]) {
-    char buffer_Z[100];  // string buffer
-
-    int kinetics_len;
-    struct mag_record *mag_table = NULL; // mag_table is of length kinetics_len
-
-    int arc_len;
-    struct arc_record *arc_table = NULL; // arc_table is of length arc_len
-
-    fprintf(stderr,"\n   *** OSAN POSITIONING 2017 v0.01 ***\n\n");
-
-    if (argc != 2) {
-       fprintf(stderr,"Usage:\n");
-       fprintf(stderr,"Normalize <filename>\n\n");
-       exit(1);
-    }
-
-    sprintf(buffer_Z,"%s",argv[1]);   // *.sqlite3
-
-    kinetics2record(buffer_Z, &mag_table, &kinetics_len);
-
-    for (int row_cnt=0; row_cnt<kinetics_len; row_cnt++) {
-        printf(">> %u | ",mag_table[row_cnt].seq_id);
-        printf("%f | ",mag_table[row_cnt].mxt);
-        printf("%f\n",mag_table[row_cnt].myt);
-    }
-
-    gps2arc_record(buffer_Z, &arc_table, &arc_len, &mag_table, &kinetics_len);
-
-    for (int rec_cnt=0; rec_cnt<arc_len; rec_cnt++) {
-        printf("++->%u | %u | %u | ",rec_cnt, arc_table[rec_cnt].left_seq_id, arc_table[rec_cnt].right_seq_id);
-        printf("%u | %u \n", arc_table[rec_cnt].left_mag_idx, arc_table[rec_cnt].right_mag_idx);
-    }
-
-    printf("length fux %u \n\n",kinetics_len);
-
-    // printf("%u | ",magtable[555].seq_id);
-    // printf("%f | ",magtable[555].mxt);
-    // printf("%f\n",magtable[555].myt);
-
-
-
-    return 0;
-
 }
