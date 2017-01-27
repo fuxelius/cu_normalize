@@ -77,7 +77,8 @@ int main(int argc, char *argv[]) {
     // Creates an arc_table which is a partitioning of mxt, myt between gps positions
     // arc_table[].left_mag_idx and arc_table[].right_mag_idx points out each arcs border
     // These arcs partition the entire mag_table
-    gps2arc_record(buffer_Z, &arc_table, &arc_len, &mag_table, &mag_len);
+
+    gps2arc_record(buffer_Z, &arc_table, &arc_len, &mag_table, &mag_len);   // <-------------------------------- krashar
 
     #ifdef DEBUG_INFO_1
         // Proves that the pointers are correct in arc_table
@@ -100,6 +101,9 @@ int main(int argc, char *argv[]) {
     // bin=5; range=200 => (-1000,1000); cut_off=2
     //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 5, 200, 2);
 
+    free(mag_table);
+
+    free(arc_table);
 
     return 0;
 

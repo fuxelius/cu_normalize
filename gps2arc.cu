@@ -28,7 +28,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         exit(0);
     }
 
-    error = sqlite3_prepare_v2(conn,"SELECT count(seq_id) AS gps_cnt FROM gps",1000, &res, &tail);
+    error = sqlite3_prepare_v2(conn,"SELECT count(*) FROM event WHERE token = 'gps'", 1000, &res, &tail);
 
     if (error != SQLITE_OK) {
         puts("We did not get any data!");
@@ -38,8 +38,8 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     while (sqlite3_step(res) == SQLITE_ROW) {
         gps_cnt = sqlite3_column_int(res, 0);
         *arc_len = gps_cnt - 1;
-        //printf("gps_cnt %u\n", gps_cnt);
-        //printf("arc_len %u\n", *arc_len);
+        printf("gps_cnt %u\n", gps_cnt);
+        printf("arc_len %u\n", *arc_len);
     }
 
     struct arc_record *new_table = (struct arc_record*) malloc((*arc_len) * sizeof(struct arc_record));
@@ -58,13 +58,12 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     int seq_id_prev; // Previous seq_id value
 
     // An array that holds all index to arcs in mag_table
-    int *arc_idx = (int*) malloc(((*arc_len) * 2 + 5) * sizeof(int));  // <------ lägger till +1 extra arc_idx[arc_cnt2] som dyker upp efter sista gps som l
-
-    printf("@@@@@ arc_idx size: %u\n",(*arc_len) * 2 + 5);
-
+    int arc_idx_size = (*arc_len) * 2 + 1;                       // <------ lägger till +1 extra arc_idx[arc_cnt2] som dyker upp efter sista gps som l
+    int *arc_idx = (int*) malloc(arc_idx_size * sizeof(int));
     int arc_cnt2 = 0; // Counter for arc_idx array                               '-----> D LEFT kinetics | 3346'
 
-    int row_cnt = 0;
+    printf("@@@@@ arc_idx_size: %u\n", arc_idx_size);
+
     while (sqlite3_step(res) == SQLITE_ROW) {
         seq_id = sqlite3_column_int(res, 0);
         sprintf(token,"%s", sqlite3_column_text(res, 1));
@@ -77,7 +76,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         printf("@@@@@ arc_cnt2: %u \n", arc_cnt2);
 
         //implement state machine and populates arc_table
-        if (state == 0 && (strcmp("kinetics", token) == 0)) {
+        if ((state == 0) && (strcmp("kinetics", token) == 0)) {
             #ifdef DEBUG_INFO_0
                 printf("-----> A %s | \n", token);
             #endif
@@ -86,7 +85,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             continue;
         }
 
-        if (state == 0 && (strcmp("gps", token) == 0)) {
+        if ((state == 0) && (strcmp("gps", token) == 0)) {
             #ifdef DEBUG_INFO_0
                 printf("-----> B %s | \n", token);
             #endif
@@ -95,7 +94,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             continue;
         }
 
-        if (state == 1 && (strcmp("gps", token) == 0)) {
+        if ((state == 1) && (strcmp("gps", token) == 0)) {
             #ifdef DEBUG_INFO_0
                 printf("-----> C %s | \n", token);
             #endif
@@ -104,7 +103,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             continue;
         }
 
-        if (state == 1 && (strcmp("kinetics", token) == 0)) {
+        if ((state == 1) && (strcmp("kinetics", token) == 0)) {
             #ifdef DEBUG_INFO_0
                 printf("-----> D LEFT %s | %u\n", token, seq_id);
             #endif
@@ -119,7 +118,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             continue;
         }
 
-        if (state == 2 && (strcmp("kinetics", token) == 0)) {
+        if ((state == 2) && (strcmp("kinetics", token) == 0)) {
             #ifdef DEBUG_INFO_0
                 printf("-----> E %s | \n", token);
             #endif
@@ -130,7 +129,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             continue;
         }
 
-        if (state == 2 && (strcmp("gps", token) == 0)) {
+        if ((state == 2) && (strcmp("gps", token) == 0)) {
 
             #ifdef DEBUG_INFO_0
                 printf("-----> F RIGHT %s |%u\n", token, seq_id_prev);
@@ -142,31 +141,30 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             arc_idx[arc_cnt2] = seq_id_prev;
             arc_cnt2++;
 
-            state = 1;
+            state = 1;             // <----------------------------------------------------denna krashar hela skiten
             continue;
         }
 
-        row_cnt++;
     }
 
 
 
-    #ifdef DEBUG_INFO_0
-        //DEBUG: print all indexes to arc_table
-        for (int i=0; i < (2 * (*arc_len) + 1); i++) {   // +1 här ser man det extra entryt från *arc_idx=... (????? 38 3346)
-            printf("????? %u %u \n", i, arc_idx[i]);
-        }
-    #endif
+    // #ifdef DEBUG_INFO_0
+    //     //DEBUG: print all indexes to arc_table
+    //     for (int i=0; i < (2 * (*arc_len) + 1); i++) {   // +1 här ser man det extra entryt från *arc_idx=... (????? 38 3346)
+    //         printf("????? %u %u \n", i, arc_idx[i]);
+    //     }
+    // #endif
 
     int forward = 0; // shifts one step forward for each idx found in arc_idx
-    // Find all indexes for an arc into the mag_table
-    for(int idx=0; idx < *mag_len; idx++) {
+    //Find all indexes for an arc into the mag_table
+    for(int idx=0; idx < (*mag_len); idx++) {
 
         #ifdef DEBUG_INFO_0
             printf(">>>>> %u %u \n", idx, (*mag_table)[idx].seq_id);
         #endif
 
-        if ((forward < (2 * (*arc_len))) && (arc_idx[forward] == (*mag_table)[idx].seq_id)) {
+        if ((forward < arc_idx_size - 1) && (arc_idx[forward] == (*mag_table)[idx].seq_id)) { // -1, because last one is not used!!!
 
             #ifdef DEBUG_INFO_0
                 printf("::::: ----->%u %u %u \n", forward, idx, (*mag_table)[idx].seq_id);
