@@ -28,7 +28,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         exit(0);
     }
 
-    error = sqlite3_prepare_v2(conn,"SELECT count(*) FROM event WHERE token = 'gps'", 1000, &res, &tail);
+    error = sqlite3_prepare_v2(conn,"SELECT count(*) FROM event WHERE token = \'gps\'", 1000, &res, &tail);
 
     if (error != SQLITE_OK) {
         puts("We did not get any data!");
@@ -38,13 +38,13 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     while (sqlite3_step(res) == SQLITE_ROW) {
         gps_cnt = sqlite3_column_int(res, 0);
         *arc_len = gps_cnt - 1;
-        printf("gps_cnt %u\n", gps_cnt);
-        printf("arc_len %u\n", *arc_len);
+        //printf("gps_cnt %u\n", gps_cnt);
+        //printf("arc_len %u\n", *arc_len);
     }
 
     struct arc_record *new_table = (struct arc_record*) malloc((*arc_len) * sizeof(struct arc_record));
 
-    error = sqlite3_prepare_v2(conn,"SELECT seq_id, token FROM event WHERE token='gps' OR token='kinetics' ORDER BY seq_id",1000, &res, &tail);
+    error = sqlite3_prepare_v2(conn,"SELECT seq_id, token FROM event WHERE token=\'gps\' OR token=\'kinetics\' ORDER BY seq_id",1000, &res, &tail);
 
     if (error != SQLITE_OK) {
         puts("We did not get any data!");
@@ -62,7 +62,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     int *arc_idx = (int*) malloc(arc_idx_size * sizeof(int));
     int arc_cnt2 = 0; // Counter for arc_idx array                               '-----> D LEFT kinetics | 3346'
 
-    printf("@@@@@ arc_idx_size: %u\n", arc_idx_size);
+    //printf("@@@@@ arc_idx_size: %u\n", arc_idx_size);
 
     while (sqlite3_step(res) == SQLITE_ROW) {
         seq_id = sqlite3_column_int(res, 0);
@@ -73,7 +73,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             printf("%s | \n", token);
         #endif
 
-        printf("@@@@@ arc_cnt2: %u \n", arc_cnt2);
+        //printf("@@@@@ arc_cnt2: %u \n", arc_cnt2);
 
         //implement state machine and populates arc_table
         if ((state == 0) && (strcmp("kinetics", token) == 0)) {
@@ -141,13 +141,11 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             arc_idx[arc_cnt2] = seq_id_prev;
             arc_cnt2++;
 
-            state = 1;             // <----------------------------------------------------denna krashar hela skiten
+            state = 1;
             continue;
         }
 
     }
-
-
 
     // #ifdef DEBUG_INFO_0
     //     //DEBUG: print all indexes to arc_table
