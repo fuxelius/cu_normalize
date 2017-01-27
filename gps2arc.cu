@@ -6,7 +6,8 @@
 #include "struct.h"
 #include "makros.h"
 
-// Load sqlite database table sql and kinetics to record in memory
+// gps2arc_record calculate the pointer index into mag_table and defines all arcs, returned in arc_table
+
 int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len) {
     sqlite3 *conn;
     sqlite3_stmt *res;
@@ -57,7 +58,10 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     int seq_id_prev; // Previous seq_id value
 
     // An array that holds all index to arcs in mag_table
-    int *arc_idx = (int*) malloc((*arc_len) * 2 * sizeof(int) + 1);  // <------ lägger till +1 extra arc_idx[arc_cnt2] som dyker upp efter sista gps som left_ptr
+    int *arc_idx = (int*) malloc(((*arc_len) * 2 + 5) * sizeof(int));  // <------ lägger till +1 extra arc_idx[arc_cnt2] som dyker upp efter sista gps som l
+
+    printf("@@@@@ arc_idx size: %u\n",(*arc_len) * 2 + 5);
+
     int arc_cnt2 = 0; // Counter for arc_idx array                               '-----> D LEFT kinetics | 3346'
 
     int row_cnt = 0;
@@ -69,6 +73,8 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
             printf("%u | ",seq_id);
             printf("%s | \n", token);
         #endif
+
+        printf("@@@@@ arc_cnt2: %u \n", arc_cnt2);
 
         //implement state machine and populates arc_table
         if (state == 0 && (strcmp("kinetics", token) == 0)) {
@@ -143,6 +149,8 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         row_cnt++;
     }
 
+
+
     #ifdef DEBUG_INFO_0
         //DEBUG: print all indexes to arc_table
         for (int i=0; i < (2 * (*arc_len) + 1); i++) {   // +1 här ser man det extra entryt från *arc_idx=... (????? 38 3346)
@@ -183,7 +191,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
         }
     }
 
-    free(arc_idx); // <-------*** Error in `./cu_normalize11': double free or corruption (!prev): 0x00000000008c7060 ***
+    free(arc_idx);
 
     sqlite3_finalize(res);
 

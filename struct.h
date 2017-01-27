@@ -7,10 +7,30 @@ typedef struct mag_record {  // Magnetometer data implement as an array of struc
     bool outlier; // Set outliers to 1 otherwise 0
 } helu;
 
+// mag_record[left_mag_idx] - mag_record[right_mag_idx] utgöra en arc
 typedef struct arc_record {  // Magnetometer data implement as an array of structs
-    int left_seq_id;  // överflödig ..
-    int right_seq_id; // överflödig ..
-    int left_mag_idx;  //left index of an arc in mag_record[]
-    int right_mag_idx; //right index of an arc in mag_record[]
+    int left_seq_id;         // calculated in kinetics
+    int right_seq_id;        // calculated in kinetics
+    int left_mag_idx;        // left index of an arc in mag_record[]; calculated in gps2arc
+    int right_mag_idx;       // right index of an arc in mag_record[]; calculated in gps2arc
+
     // More data associated with an arc
+    // seed values
+    float seed_x;
+    float seed_y;
+    float seed_scale_r;
+    //float seed_scale_y = 1;
+    //float seed_skew_rad = 0;
+
+    // iteratives
+    float ls;         // least square for an iteration
+    float x0;
+    float y0;
+    float scale_r;
+    float scale_y;
+    float skew_rad;
+
+    // results from iteration
+    float mfv;      // magnetic field vector
+    float rho;      // baering
 } helu2;
