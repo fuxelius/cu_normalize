@@ -5,74 +5,12 @@
 #include <sqlite3.h>
 
 #include "struct.h"
-#include "gps2arc.h"
-#include "kinetics.h"
 #include "makros.h"
 
-// kompilera
-// nvcc main.cu gps2arc.cu kinetics.cu -o normalize -lsqlite3
+#include "histogram.h"
+#include "gps2arc.h"
+#include "kinetics.h"
 
-int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len, int bin, int range, int cut_off) {
-
-    puts("\n>All arcs in mag_table");
-
-    int *hist_table_mxt_pos = (int*) malloc(range * sizeof(int)); // positive values
-    int *hist_table_mxt_neg = (int*) malloc(range * sizeof(int)); // negative values
-    int *hist_table_myt_pos = (int*) malloc(range * sizeof(int)); // positive values
-    int *hist_table_myt_neg = (int*) malloc(range * sizeof(int)); // negative values
-
-    // traverse all arcs
-    for (int arc_idx = 0; arc_idx < (*arc_len); arc_idx++) {
-        memset(hist_table_mxt_pos, 0, range * sizeof(int));  // initialize hist_table_pos to zeros
-        memset(hist_table_mxt_neg, 0, range * sizeof(int));  // initialize hist_table_neg to zeros
-        memset(hist_table_myt_pos, 0, range * sizeof(int));  // initialize hist_table_pos to zeros
-        memset(hist_table_myt_neg, 0, range * sizeof(int));  // initialize hist_table_neg to zeros
-
-        puts("\n>Next arc");
-
-        float mxt;
-        float myt;
-
-        int mxt_idx; // mxt indexed to hist_tables
-        int myt_idx; // mxt indexed to hist_tables
-
-        // travese all mag_records in an arc
-        for (int mag_idx = (*arc_table)[arc_idx].left_mag_idx; mag_idx <= (*arc_table)[arc_idx].right_mag_idx; mag_idx++) {
-
-            mxt = (*mag_table)[mag_idx].mxt;
-            myt = (*mag_table)[mag_idx].myt;
-
-            printf("> %u %u\t%f\t%f", arc_idx, mag_idx, mxt, myt);
-
-            // build up the histogram here
-            if (mxt >= 0) {
-                mxt_idx = (int)(mxt/bin);
-                printf("\tmxt_idx: %u\n", mxt_idx);  // <---------------------fortsätt här
-
-                if (mxt_idx > range) {
-                    // mark as outlier direct
-                }
-
-            }
-            else {
-                mxt_idx = (int)(-mxt/bin);
-                printf("\ttmxt_idx: %u\n", mxt_idx); // <---------------------fortsätt här
-                // ...
-            }
-
-
-        }
-
-        puts("\n");
-    }
-
-    free(hist_table_mxt_pos);
-    free(hist_table_mxt_neg);
-    free(hist_table_myt_pos);
-    free(hist_table_myt_neg);
-
-    return 0;
-}
 
 
 int main(int argc, char *argv[]) {

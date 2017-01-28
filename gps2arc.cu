@@ -15,12 +15,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     const char *errMSG;
     const char *tail;
 
-    //int kinetics_len;          // The length of the kinetics table
-    //int row_cnt;
-    int gps_cnt;
-    //int arc_cnt = 0;
-    //int state = 0;               // State machine
-    //int seq_id;
+    int gps_cnt;   // Read from table 'event' in database
 
     error = sqlite3_open(db_name, &conn);
     if (error) {
@@ -52,7 +47,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
     }
 
     int arc_cnt = 0;  // Counter for arc_table values
-    int state = 0;
+    int state = 0;    // State machine
     char token[100];
     int seq_id;
     int seq_id_prev; // Previous seq_id value
