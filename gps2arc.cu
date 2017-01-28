@@ -70,7 +70,7 @@ int gps2arc_record(char *db_name, struct arc_record **arc_table, int *arc_len, s
 
         //printf("@@@@@ arc_cnt2: %u \n", arc_cnt2);
 
-        //implement state machine and populates arc_table
+        // state machine and populates arc_table
         if ((state == 0) && (strcmp("kinetics", token) == 0)) {
             #ifdef DEBUG_INFO_0
                 printf("-----> A %s | \n", token);

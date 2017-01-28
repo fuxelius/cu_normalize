@@ -9,6 +9,7 @@ typedef struct mag_record {  // Magnetometer data implement as an array of struc
 } helu;
 
 
+
 // mag_record[left_mag_idx] - mag_record[right_mag_idx] utgör en arc
 typedef struct arc_record {  // Magnetometer data implement as an array of structs
     int left_seq_id;         // calculated in kinetics
