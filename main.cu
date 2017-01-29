@@ -76,33 +76,21 @@ int main(int argc, char *argv[]) {
 
     //------------------------------- experiment -------------------------------
 
-    int left_mag_idx;
-    int right_mag_idx;
-
     // 1) this code operates on all arcs, one at a time
     for (int arc_idx = 0; arc_idx < arc_len; arc_idx++) {
-        left_mag_idx  = arc_table[arc_idx].left_mag_idx;
-        right_mag_idx = arc_table[arc_idx].right_mag_idx;
 
         // bin=5; range=200 => (-1000,1000); cut_off=2
-        histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
-
+        histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 0, 5, 100, 3);
     }
 
     // 2) all mag pointsfrom arc 0-18
-    left_mag_idx  = arc_table[0].left_mag_idx;
-    right_mag_idx = arc_table[18].right_mag_idx;
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 18, 5, 100, 3);
 
     // 3) all mag points from in arc 2 is negative
-    left_mag_idx  = arc_table[2].left_mag_idx;
-    right_mag_idx = arc_table[2].right_mag_idx;
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
 
     // 4) all mag points from in arc 2 is negative
-    left_mag_idx  = arc_table[17].left_mag_idx;
-    right_mag_idx = arc_table[17].right_mag_idx;
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 17, 17, 5, 100, 3);
 
     //--------------------------------------------------------------------------
 
