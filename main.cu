@@ -24,6 +24,9 @@ int main(int argc, char *argv[]) {
 
     fprintf(stderr,"\n   *** OSAN POSITIONING 2017 v0.01 ***\n\n");
 
+    // skriv ut en text här hur man refererar till programmet om man publicerar
+    // vetenskapliga resultat. OSAN POSITIONING; H-H. Fuxelius
+
     if (argc != 2) {
        fprintf(stderr,"Usage:\n");
        fprintf(stderr,"normalize <database>\n\n");
@@ -91,8 +94,17 @@ int main(int argc, char *argv[]) {
     right_mag_idx = arc_table[18].right_mag_idx;
     histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
 
-    //--------------------------------------------------------------------------
+    // 3) all mag points from in arc 2 is negative
+    left_mag_idx  = arc_table[2].left_mag_idx;
+    right_mag_idx = arc_table[2].right_mag_idx;
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
 
+    // 4) all mag points from in arc 2 is negative
+    left_mag_idx  = arc_table[17].left_mag_idx;
+    right_mag_idx = arc_table[17].right_mag_idx;
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_mag_idx, right_mag_idx, 5, 100, 3);
+
+    //--------------------------------------------------------------------------
 
 
 
