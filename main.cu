@@ -84,7 +84,10 @@ int main(int argc, char *argv[]) {
     }
 
     // 2) all mag pointsfrom arc 0-18
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 100, 120, 5, 100, 5);
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 220, 225, 5, 100, 5);
+
+    // ---> funktion för att skriva ut antalet arcs i hela databasen
+    // ---> skriv funktion för att plotta i R (seq_id,mxt,myt)
 
     // 3) all mag points from in arc 2 is negative
     //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
