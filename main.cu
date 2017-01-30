@@ -79,18 +79,18 @@ int main(int argc, char *argv[]) {
     // 1) this code operates on all arcs, one at a time
     for (int arc_idx = 0; arc_idx < arc_len; arc_idx++) {
 
-        // bin=5; range=200 => (-1000,1000); cut_off=2
-        histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 0, 5, 100, 3);
+        // bin=5; range=200 => (-1000,1000); cut_off<5
+        //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 0, 5, 100, 5);
     }
 
     // 2) all mag pointsfrom arc 0-18
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 18, 5, 100, 3);
+    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 100, 120, 5, 100, 5);
 
     // 3) all mag points from in arc 2 is negative
     //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
 
     // 4) all mag points from in arc 2 is negative
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 17, 17, 5, 100, 3);
+    //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 17, 17, 5, 100, 3);
 
     //--------------------------------------------------------------------------
 
