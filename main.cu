@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
     histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 18, 5, 100, 3);
 
     // 3) all mag points from in arc 2 is negative
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
+    //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
 
     // 4) all mag points from in arc 2 is negative
     histogram(&arc_table, &arc_len, &mag_table, &mag_len, 17, 17, 5, 100, 3);
