@@ -180,38 +180,40 @@ int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **m
         mxt_boundry_high = (float) (bin+1) * mxt_pos_idx;
         mxt_boundry_low  = (float) (-bin-1) * mxt_neg_idx;
 
-        printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
+        //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
     }
     else if (mxt_pos_idx != -1) { // only positive side of origo
             mxt_boundry_high = (float) (bin+1) * mxt_pos_idx;
             mxt_boundry_low  = (float) (bin-1) * mxt_pos_idx_rev;
-            printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
+            //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
         }
         else { // mxt_neg_idx != -1, only negative side of origo
             mxt_boundry_high = (float) (-bin+1) * mxt_neg_idx_rev;
             mxt_boundry_low  = (float) (-bin-1) * mxt_neg_idx;
-            printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
+            //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
         }
+
+    printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
 
     // if elements > cut_off exist on both sides of origo
     if (myt_pos_idx != -1 && myt_neg_idx != -1) {  // both sides of origo
         myt_boundry_high = (float) (bin+1) * myt_pos_idx;
         myt_boundry_low  = (float) (-bin-1) * myt_neg_idx;
 
-        printf("\nx=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
+        //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
     }
     else if (myt_pos_idx != -1) { // only positive side of origo
             myt_boundry_high = (float) (bin+1) * myt_pos_idx;
             myt_boundry_low  = (float) (bin-1) * myt_pos_idx_rev;
-            printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
+            //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
         }
         else { // myt_neg_idx != -1, only negative side of origo
             myt_boundry_high = (float) (-bin+1) * myt_neg_idx_rev;
             myt_boundry_low  = (float) (-bin-1) * myt_neg_idx;
-            printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
-            // Set outlier
+            //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
         }
 
+    printf("y=<%f,%f>\n\n", myt_boundry_low, myt_boundry_high);
 
     // 1) loop throught mxt,myt and set the outliers in mag_table->outlier
     for (int mag_idx = (*arc_table)[left_arc_idx].left_mag_idx; mag_idx <= (*arc_table)[right_arc_idx].right_mag_idx; mag_idx++) {
@@ -221,13 +223,23 @@ int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **m
         if (!(mxt_boundry_low < mxt && mxt < mxt_boundry_high && myt_boundry_low < myt && myt < myt_boundry_high)) {
             //printf("outlier %f,%f\n", mxt, myt);
             // mark outlier
+            (*mag_table)[mag_idx].outlier = 1; // Set outlier true
         }
         else {
-            printf("%f,%f\n", mxt, myt);
+            //printf("%f,%f\n", mxt, myt);
+            (*mag_table)[mag_idx].outlier = 0; // Set outlier false
         }
     }
     // 2) Räkna fram seeds och sätt i arc_table
-    // 3) set argument (-histogram-raw) for writing mxt,myt raw till stdout, så man kan plotta i R
+    float seed_x = (mxt_boundry_high + mxt_boundry_low) / 2;
+    float seed_y = (myt_boundry_high + myt_boundry_low) / 2;
+    float seed_scale_r = 1 / ( ( ((mxt_boundry_high - mxt_boundry_low) / 2) + ((myt_boundry_high - myt_boundry_low) / 2) ) / 2 );
+
+    printf("seed_x=%f seed_y=%f seed_scale_r=%f\n\n", seed_x, seed_y, seed_scale_r);
+
+    // hmm --- har ingen pekare in här till arc .... arghhhhh, sätt en arc_idx pekare i varje mag
+
+
 
 
     free(hist_table_mxt_pos);

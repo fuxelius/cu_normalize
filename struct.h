@@ -6,6 +6,8 @@ typedef struct mag_record {  // Magnetometer data implement as an array of struc
     float mxt;    // CUDA single precision
     float myt;    // CUDA single precision
     bool outlier; // Set outliers to 1 otherwise 0
+
+    int arc_idx;  // index refering back to arc_table[idx]
 } helu;
 
 
