@@ -136,6 +136,11 @@ int main(int argc, char *argv[]) {
 
     printf("arc_len=%i", arc_len-1);
 
+
+
+    // <-------------------------------------- skapa meta_table här, som partitionerar i arcs i storlek N
+
+
     // 2) all mag pointsfrom arc 0-18
     histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_arc_idx, right_arc_idx, 5, 100, 5);
 

@@ -1,6 +1,3 @@
-
-
-
 typedef struct mag_record {  // Magnetometer data implement as an array of structs
     int seq_id;        // seq_id from database
     float mxt;         // CUDA single precision
@@ -9,14 +6,15 @@ typedef struct mag_record {  // Magnetometer data implement as an array of struc
 
     // results from CUDA iteration
     float quad_error;  // quadratic error
-    float mfv;            // magnetic field vector
-    float rho;            // baering
+    float normalized_x;
+    float normalized_y;
+    float mfv;         // magnetic field vector
+    float rho;         // baering
 
 } helu;
 
 
-
-// mag_record[left_mag_idx] - mag_record[right_mag_idx] utgör en arc
+// mag_record[left_mag_idx] - mag_record[right_mag_idx] utgör en arc                  <----------------- ta bort denna
 typedef struct arc_record {  // Magnetometer data implement as an array of structs
     int left_seq_id;         // calculated in kinetics
     int right_seq_id;        // calculated in kinetics
@@ -25,27 +23,21 @@ typedef struct arc_record {  // Magnetometer data implement as an array of struc
 } helu2;
 
 
-
 //  flytta dessa till en meta_table[meta_idx] som täcker N arcs
+//  bör vara multipler av 32 mag_records för att passa CUDA WARPS
+//  välj i första hand så att det blir lagom stora datasets
 typedef struct meta_record {
-    int left_arc_idx;
-    int right_arc_idx;
-    // lenght = right_arc_idx - left_arc_idx; needed for CUDA call
-
-    float seed_x;
-    float seed_y;
-    float seed_scale_r;
-    //float seed_scale_y = 1;     These are set in CUDA direct
-    //float seed_skew_rad = 0;    These are set in CUDA direct
-
-    // iteration internals
-    int deepth;           // The depth of iteration
+    int left_mag_idx;  // tidigare left_arc_idx
+    int right_mag_idx; // tidigare right_arc_idx
 
     // iterative parameters used in CUDA
-    float ls;             // least square for an iteration
-    float x0;
-    float y0;
-    float scale_r;
-    float scale;
-    float rotate;
+    float x0;               // seed_x första gången i iterationen
+    float y0;               // seed_y första gången i iterationen
+    float scale_r;          // seed_scale_r första gången i iterationen
+    float scale_y_axis;     // = 1 första gången i iterationen
+    float theta;            // = 0 första gången i iterationen
+
+    float ls;               // least square for an iteration
+    int deepth;             // The depth of iteration
+
 } helu3;

@@ -61,8 +61,43 @@ __global__ void point_square_GPU(float mxt, float myt, float x0, float y0, float
                                                                  float *normalized_x, float *normalized_y, float *quad_error) {
 
 
-
 }
+
+// // CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
+// __global__ void point_square_GPU(struct meta_record **meta_table, int *meta_len, struct arc_record **arc_table, int *arc_len,
+//                                                                                  struct mag_record **mag_table, int *mag_len) {
+//
+//     int meta_idx = blockIdx.x;
+//     int meta_rec_len = ((*meta_table)[meta_idx].left_arc_idx).right_mag_idx - ((*meta_table)[meta_idx].left_arc_idx).left_mag_idx;
+//     int mag_idx = ((*meta_table)[meta_idx].left_arc_idx).left_mag_idx + threadIdx.x;
+//
+//     //unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
+//
+//     if ( !((*mag_table)[mag_idx].outlier) && threadIdx.x <= meta_rec_len) { // ?? <= meta_rec_len ???
+//
+//         // from mag_table
+//         mxt = (*mag_table)[mag_idx].mxt;
+//         myt = (*mag_table)[mag_idx].myt;
+//
+//         // from meta_table model
+//         float x0            = (*meta_table)[meta_idx].x0
+//         float y0            = (*meta_table)[meta_idx].y0
+//         float scale_r       = (*meta_table)[meta_idx].scale_r
+//         float scale_y_axis  = (*meta_table)[meta_idx].scale_y_axis
+//         float theta         = (*meta_table)[meta_idx].theta
+//
+//
+//         // .... the holy shebang
+//
+//
+//         // saved to mag_table
+//         (*mag_table)[mag_idx].normalized_x =
+//         float *normalized_y =
+//         float *quad_error   =
+//
+//   }
+//
+// }
 
 
 
