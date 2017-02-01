@@ -1,4 +1,6 @@
 #include <cuda_runtime.h>
+#include "common/common.h"
+
 #include <stdio.h>
 #include <stdint.h>
 #include <sqlite3.h>
@@ -11,6 +13,7 @@
 #include "kinetics.h"
 
 #include "point_square.h"
+#include "device_info.h"
 
 // plot_raw_filtered print all raw data between left_arc_idx and right_arc_idx with outliers excluded.
 // used for creating plots to R to debug and analysis. to run from BASH and inside main
@@ -38,6 +41,18 @@ void plot_raw_filtered(struct arc_record **arc_table, int *arc_len, struct mag_r
 
 
 int main(int argc, char *argv[]) {
+
+    fprintf(stderr,"\n\n                               *** OSAN POSITIONING 2017 v0.01 ***\n\n");
+
+    print_device_info();    // Print out all relevant CUDA device information
+
+    if (argc != 2) {
+       fprintf(stderr,"Usage:\n");
+       fprintf(stderr,"normalize <database>\n\n");
+       exit(1);
+    }
+
+
     char buffer_Z[100];  // string buffer
 
     int mag_len;
@@ -46,18 +61,15 @@ int main(int argc, char *argv[]) {
     int arc_len;
     struct arc_record *arc_table = NULL; // arc_table is of length arc_len
 
-    fprintf(stderr,"\n   *** OSAN POSITIONING 2017 v0.01 ***\n\n");
+
 
     // skriv ut en text här hur man refererar till programmet om man publicerar
     // vetenskapliga resultat. OSAN POSITIONING; H-H. Fuxelius
 
-    if (argc != 2) {
-       fprintf(stderr,"Usage:\n");
-       fprintf(stderr,"normalize <database>\n\n");
-       exit(1);
-    }
 
     sprintf(buffer_Z,"%s",argv[1]);   // *.sqlite3
+
+
 
     // Reads in magnetometer data from database (table kinetics) to magtable and returns
     // table length kinetics_len
@@ -138,13 +150,13 @@ int main(int argc, char *argv[]) {
 
 
     // tested model
-    float mxt        =  200;
-    float myt        =  -30;
+    float mxt      =  200;
+    float myt      =  -30;
     float x0       =   16;
     float y0       =  -124;
     float scale_r  = 0.0041;
-    float scale_y  =  1.045; // 1.045
-    float rotate =  0.5;
+    float scale_y  = 1.045; // 1.045
+    float rotate   = 0.0;
 
     float normalized_x;  // Return value
     float normalized_y;  // Return value
@@ -156,10 +168,9 @@ int main(int argc, char *argv[]) {
 
         if (!mag_table[mag_idx].outlier) {
             point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate, &normalized_x, &normalized_y, &quad_error);
-            printf("%f,%f\n", normalized_x, normalized_y);
+            //printf("%f,%f\n", normalized_x, normalized_y);
         }
     }
-
 
 
 

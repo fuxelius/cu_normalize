@@ -37,7 +37,7 @@ void point_square(float mxt, float myt, float x0, float y0, float scale_r, float
     float scale_x = rotate_x;
     float scale_y = rotate_y * scale_y_axis;                         // Scale y-axis to make the ellips to a cicle
 
-    //printf("scale,%f,%f\n", scale_x, scale_y); // För R-plot
+    printf("scale,%f,%f\n", scale_x, scale_y); // För R-plot
 
     rotate_x = scale_x * cosf(-theta) - scale_y * sinf(-theta);      // Rotate -theta degrees (back)
     rotate_y = scale_x * sinf(-theta) + scale_y * cosf(-theta);      // Rotate -theta degrees (back)
