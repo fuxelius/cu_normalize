@@ -11,6 +11,7 @@
 #include "gps2arc.h"
 #include "kinetics.h"
 
+#include "point_square.h"
 
 // plot_raw_filtered print all raw data between left_arc_idx and right_arc_idx with outliers excluded.
 // used for creating plots to R to debug and analysis. to run from BASH and inside main
@@ -18,7 +19,7 @@
 // 1) kinetics2record - the kinetics file to datastructure magtable
 // 2) gps2arc_record  - Creates arcs pointing into mag_table
 // 3) histogram       - cut off outliers and mark it in mag_table[idx].outlier
-int plot_raw_filtered(struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
+void plot_raw_filtered(struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
     float mxt;
     float myt;
 
@@ -107,8 +108,15 @@ int main(int argc, char *argv[]) {
         //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 0, 5, 100, 5);
     }
 
+    // int left_arc_idx = 0;
+    // int right_arc_idx = 18;
+
+
+
     int left_arc_idx = 0;
-    int right_arc_idx = 18;
+    int right_arc_idx = arc_len-1;
+
+    printf("arc_len=%i", arc_len-1);
 
     // 2) all mag pointsfrom arc 0-18
     histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_arc_idx, right_arc_idx, 5, 100, 5);
@@ -116,8 +124,9 @@ int main(int argc, char *argv[]) {
     // ---> funktion för att skriva ut antalet arcs i hela databasen
     // ---> skriv funktion för att plotta i R (seq_id,mxt,myt)
     // ---> plotta alla origo från alla arcs och se hur dom hamnar:
-    plot_raw_filtered(&arc_table, &arc_len, &mag_table, &mag_len, left_arc_idx, right_arc_idx);
+    //plot_raw_filtered(&arc_table, &arc_len, &mag_table, &mag_len, left_arc_idx, right_arc_idx);
 
+    // använd -v, verbose mode för att skriva ut ALL debug info i en katalog
 
     // 3) all mag points from in arc 2 is negative
     //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
@@ -126,6 +135,28 @@ int main(int argc, char *argv[]) {
     //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 17, 17, 5, 100, 3);
 
     //--------------------------------------------------------------------------
+
+
+    //point_square(x, y, x0, y0, scale_r, scale_y, skew_rad); // 0 <= skew_rad <= pi/4
+
+    float mxt        =  200;
+    float myt        =  -30;
+    float x0       =   16;
+    float y0       =  -124;
+    float scale_r  = 0.0041;
+    float scale_y  =  1.045; // 1.045
+    float rotate =  0.5;
+
+    for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
+        mxt = mag_table[mag_idx].mxt;
+        myt = mag_table[mag_idx].myt;
+
+        if (!mag_table[mag_idx].outlier) {
+            //printf("%f,%f\n", mxt, myt);
+            point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate);
+        }
+    }
+
 
 
 

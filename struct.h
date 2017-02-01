@@ -6,8 +6,6 @@ typedef struct mag_record {  // Magnetometer data implement as an array of struc
     float mxt;    // CUDA single precision
     float myt;    // CUDA single precision
     bool outlier; // Set outliers to 1 otherwise 0
-
-    int arc_idx;  // index refering back to arc_table[idx]
 } helu;
 
 
@@ -27,8 +25,11 @@ typedef struct arc_record {  // Magnetometer data implement as an array of struc
     //float seed_scale_y = 1;     These are set in CUDA direct
     //float seed_skew_rad = 0;    These are set in CUDA direct
 
+    // iteration internals
+    int deepth;           // The depth of iteration
+
     // iterative parameters used in CUDA
-    float ls;         // least square for an iteration
+    float ls;             // least square for an iteration
     float x0;
     float y0;
     float scale_r;
@@ -36,6 +37,6 @@ typedef struct arc_record {  // Magnetometer data implement as an array of struc
     float skew_rad;
 
     // results from CUDA iteration
-    float mfv;      // magnetic field vector
-    float rho;      // baering
+    float mfv;            // magnetic field vector
+    float rho;            // baering
 } helu2;

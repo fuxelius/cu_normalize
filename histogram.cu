@@ -235,12 +235,14 @@ int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **m
     float seed_y = (myt_boundry_high + myt_boundry_low) / 2;
     float seed_scale_r = 1 / ( ( ((mxt_boundry_high - mxt_boundry_low) / 2) + ((myt_boundry_high - myt_boundry_low) / 2) ) / 2 );
 
-    printf("seed_x=%f seed_y=%f seed_scale_r=%f\n\n", seed_x, seed_y, seed_scale_r);
+    // set the same seed for arcs in arc_table from left_arc_idx to right_arc_idx
+    for (int arc_idx = left_arc_idx; arc_idx <= right_arc_idx; arc_idx++) {
+        printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
 
-    // hmm --- har ingen pekare in här till arc .... arghhhhh, sätt en arc_idx pekare i varje mag
-
-
-
+        (*arc_table)[arc_idx].seed_x = seed_x;
+        (*arc_table)[arc_idx].seed_y = seed_y;
+        (*arc_table)[arc_idx].seed_scale_r = seed_scale_r;
+    }
 
     free(hist_table_mxt_pos);
     free(hist_table_mxt_neg);
