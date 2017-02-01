@@ -48,12 +48,12 @@ void print_device_info(void) {
                deviceProp.l2CacheSize);
     }
 
-    printf("  Max Texture Dimension Size (x,y,z)             1D=(%d), "
+    printf("  Max Texture Dimension Size (x,y,z):            1D=(%d), "
            "2D=(%d,%d), 3D=(%d,%d,%d)\n", deviceProp.maxTexture1D,
            deviceProp.maxTexture2D[0], deviceProp.maxTexture2D[1],
            deviceProp.maxTexture3D[0], deviceProp.maxTexture3D[1],
            deviceProp.maxTexture3D[2]);
-    printf("  Max Layered Texture Size (dim) x layers        1D=(%d) x %d, "
+    printf("  Max Layered Texture Size (dim) x layers:       1D=(%d) x %d, "
            "2D=(%d,%d) x %d\n", deviceProp.maxTexture1DLayered[0],
            deviceProp.maxTexture1DLayered[1], deviceProp.maxTexture2DLayered[0],
            deviceProp.maxTexture2DLayered[1],

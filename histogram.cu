@@ -239,9 +239,9 @@ int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **m
     for (int arc_idx = left_arc_idx; arc_idx <= right_arc_idx; arc_idx++) {
         printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
 
-        (*arc_table)[arc_idx].seed_x = seed_x;
-        (*arc_table)[arc_idx].seed_y = seed_y;
-        (*arc_table)[arc_idx].seed_scale_r = seed_scale_r;
+        // (*arc_table)[arc_idx].seed_x = seed_x;
+        // (*arc_table)[arc_idx].seed_y = seed_y;
+        // (*arc_table)[arc_idx].seed_scale_r = seed_scale_r;
     }
 
     free(hist_table_mxt_pos);

@@ -2,10 +2,16 @@
 
 
 typedef struct mag_record {  // Magnetometer data implement as an array of structs
-    int seq_id;
-    float mxt;    // CUDA single precision
-    float myt;    // CUDA single precision
-    bool outlier; // Set outliers to 1 otherwise 0
+    int seq_id;        // seq_id from database
+    float mxt;         // CUDA single precision
+    float myt;         // CUDA single precision
+    bool outlier;      // Set outliers to 1 otherwise 0
+
+    // results from CUDA iteration
+    float quad_error;  // quadratic error
+    float mfv;            // magnetic field vector
+    float rho;            // baering
+
 } helu;
 
 
@@ -16,9 +22,16 @@ typedef struct arc_record {  // Magnetometer data implement as an array of struc
     int right_seq_id;        // calculated in kinetics
     int left_mag_idx;        // left index of an arc in mag_record[]; calculated in gps2arc
     int right_mag_idx;       // right index of an arc in mag_record[]; calculated in gps2arc
+} helu2;
 
-    // More data associated with an arc
-    // seed values
+
+
+//  flytta dessa till en meta_table[meta_idx] som täcker N arcs
+typedef struct meta_record {
+    int left_arc_idx;
+    int right_arc_idx;
+    // lenght = right_arc_idx - left_arc_idx; needed for CUDA call
+
     float seed_x;
     float seed_y;
     float seed_scale_r;
@@ -35,8 +48,4 @@ typedef struct arc_record {  // Magnetometer data implement as an array of struc
     float scale_r;
     float scale;
     float rotate;
-
-    // results from CUDA iteration
-    float mfv;            // magnetic field vector
-    float rho;            // baering
-} helu2;
+} helu3;

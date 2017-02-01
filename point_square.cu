@@ -54,3 +54,37 @@ void point_square(float mxt, float myt, float x0, float y0, float scale_r, float
     //printf("quad_error,%f\n", quad_error);
 
 }
+
+
+// CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
+__global__ void point_square_GPU(float mxt, float myt, float x0, float y0, float scale_r, float scale_y_axis, float theta,
+                                                                 float *normalized_x, float *normalized_y, float *quad_error) {
+
+
+
+}
+
+
+
+// grid 2D block 1D
+__global__ void sumMatrixOnGPUMix(float *MatA, float *MatB, float *MatC, int nx, int ny)
+{
+    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
+    unsigned int iy = blockIdx.y;
+    unsigned int idx = iy * nx + ix;
+
+    if (ix < nx && iy < ny)
+        MatC[idx] = MatA[idx] + MatB[idx];
+}
+
+
+void initialData(float *ip, const int size) {
+    int i;
+
+    for(i = 0; i < size; i++)
+    {
+        ip[i] = (float)(rand() & 0xFF) / 10.0f;
+    }
+
+    return;
+}
