@@ -1,5 +1,4 @@
-
-
+#include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <sqlite3.h>
@@ -137,8 +136,8 @@ int main(int argc, char *argv[]) {
     //--------------------------------------------------------------------------
 
 
-    //point_square(x, y, x0, y0, scale_r, scale_y, skew_rad); // 0 <= skew_rad <= pi/4
 
+    // tested model
     float mxt        =  200;
     float myt        =  -30;
     float x0       =   16;
@@ -147,13 +146,17 @@ int main(int argc, char *argv[]) {
     float scale_y  =  1.045; // 1.045
     float rotate =  0.5;
 
+    float normalized_x;  // Return value
+    float normalized_y;  // Return value
+    float quad_error;    // Return value
+
     for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
         if (!mag_table[mag_idx].outlier) {
-            //printf("%f,%f\n", mxt, myt);
-            point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate);
+            point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate, &normalized_x, &normalized_y, &quad_error);
+            printf("%f,%f\n", normalized_x, normalized_y);
         }
     }
 

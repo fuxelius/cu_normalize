@@ -3,8 +3,17 @@
 #include <stdint.h>
 #include "math.h"
 
-
-float point_square(float mxt, float myt, float x0, float y0, float scale_r, float scale, float theta) {
+// point_square calculates square error of a set of points (mxt,myt) against a model (x0, y0, scale_r, scale_y_axis, theta)
+// it returns ...
+// mxt  magnetometer x
+// myt  magnetometer y
+// x0 origo in model
+// x1 origo in model
+// scale_r in model; scale to unity circle with r=1
+// scale_y_axis in model; scale the rotated ellipse to a circle
+// theta in model (radians 0) <= theta <= pi/2
+void point_square(float mxt, float myt, float x0, float y0, float scale_r, float scale_y_axis, float theta,
+                  float *normalized_x, float *normalized_y, float *quad_error) {
 
     //printf("raw,%f,%f\n", x, y);
 
@@ -26,24 +35,22 @@ float point_square(float mxt, float myt, float x0, float y0, float scale_r, floa
     //printf("rotate,%f,%f\n", rotate_x, rotate_y);
 
     float scale_x = rotate_x;
-    float scale_y = rotate_y * scale;                                // Scale y-axis
+    float scale_y = rotate_y * scale_y_axis;                         // Scale y-axis to make the ellips to a cicle
 
     //printf("scale,%f,%f\n", scale_x, scale_y); // För R-plot
 
-    rotate_x = scale_x * cosf(-theta) - scale_y * sinf(-theta);  // Rotate -theta degrees
-    rotate_y = scale_x * sinf(-theta) + scale_y * cosf(-theta);  // Rotate -theta degrees
+    rotate_x = scale_x * cosf(-theta) - scale_y * sinf(-theta);      // Rotate -theta degrees (back)
+    rotate_y = scale_x * sinf(-theta) + scale_y * cosf(-theta);      // Rotate -theta degrees (back)
 
     //printf("rotate back ,%f,%f\n", rotate_x, rotate_y);
 
-    float normalized_x = rotate_x * scale_r;
-    float normalized_y = rotate_y * scale_r;
+    *normalized_x = rotate_x * scale_r;                        // Returns x,y normalized to unit circle
+    *normalized_y = rotate_y * scale_r;
 
-    printf("normalized ,%f,%f\n", normalized_x, normalized_y);
+    //printf("normalized ,%f,%f\n", *normalized_x, *normalized_y);
 
-    float quad_error = powf(sqrtf(powf(normalized_x,2) + powf(normalized_y,2)) - 1,2);
+    *quad_error = powf(sqrtf(powf(*normalized_x,2) + powf(*normalized_y,2)) - 1,2); // Returns square error from unity cicle
 
     //printf("quad_error,%f\n", quad_error);
-
-    return (quad_error);
 
 }

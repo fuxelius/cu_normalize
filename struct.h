@@ -33,8 +33,8 @@ typedef struct arc_record {  // Magnetometer data implement as an array of struc
     float x0;
     float y0;
     float scale_r;
-    float scale_y;
-    float skew_rad;
+    float scale;
+    float rotate;
 
     // results from CUDA iteration
     float mfv;            // magnetic field vector
