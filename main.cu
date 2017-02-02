@@ -154,13 +154,40 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
+    // malloc device global memory
+    struct mag_record *d_mag_table;
+    int mag_bytes = mag_len * sizeof(struct mag_record);
+    CHECK(cudaMalloc((void **)&d_mag_table, mag_bytes));
+    CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
+
+    struct arc_record *d_arc_table;
+    int arc_bytes = arc_len * sizeof(struct arc_record);
+    CHECK(cudaMalloc((void **)&d_arc_table, arc_bytes));
+    CHECK(cudaMemcpy(d_arc_table, arc_table, arc_bytes, cudaMemcpyHostToDevice));
 
 
+    // invoke kernel at host side
+    int dimx = 32;
+    dim3 block(dimx, 1);
+    dim3 grid(mag_len / block.x + 1, 1);
 
+    //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
 
+    point_square_GPU<<<grid, block>>>(&d_arc_table, arc_len, &d_mag_table, mag_len, arc_size);
 
+    CHECK(cudaDeviceSynchronize());
 
+    CHECK(cudaGetLastError());
+
+    CHECK(cudaMemcpy(mag_table, d_mag_table, mag_bytes, cudaMemcpyDeviceToHost));
+    CHECK(cudaMemcpy(arc_table, d_arc_table, arc_bytes, cudaMemcpyDeviceToHost));
+
+    // free device global memory
+    CHECK(cudaFree(d_mag_table));
+    CHECK(cudaFree(d_arc_table));
+
+    // reset device
+    CHECK(cudaDeviceReset());
 
 // ----------------------- CUDA START -----------------------
 

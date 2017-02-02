@@ -17,7 +17,7 @@
 // scale_y_axis in model; scale the rotated ellipse to a circle
 // theta in model (radians 0) <= theta <= pi/2
 void point_square(float mxt, float myt, float x0, float y0, float scale_r, float scale_y_axis, float theta,
-                  float *normalized_x, float *normalized_y, float *quad_error) {
+                                                  float *normalized_x, float *normalized_y, float *quad_error) {
 
     //printf("raw,%f,%f\n", x, y);
 
@@ -61,7 +61,7 @@ void point_square(float mxt, float myt, float x0, float y0, float scale_r, float
 
 
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-void point_square_GPU(struct arc_record **arc_table, int arc_len, struct mag_record **mag_table, int mag_len, int arc_size) {
+__global__ void point_square_GPU(struct arc_record **arc_table, int arc_len, struct mag_record **mag_table, int mag_len, int arc_size) {
 
     int x_blockIdx  = 9; // simulating
     int x_blockDim  = 32; // simulating
@@ -75,7 +75,7 @@ void point_square_GPU(struct arc_record **arc_table, int arc_len, struct mag_rec
     //int arc_idx = 1; // beräkna från threadIdx.x, blockIdx.x , blockDim.x
     //int mag_idx = 5;   // beräkna från threadIdx.x, blockIdx.x, blockDim.x
 
-    if (idx < mag_len) {
+    if ((idx < mag_len) && !((*mag_table)[mag_idx].outlier)) {
         // mag_table
         float mxt = (*mag_table)[mag_idx].mxt;
         float myt = (*mag_table)[mag_idx].myt;
@@ -128,7 +128,7 @@ void point_square_GPU(struct arc_record **arc_table, int arc_len, struct mag_rec
         // Write back result
         (*mag_table)[mag_idx].normalized_x = normalized_x;
         (*mag_table)[mag_idx].normalized_y = normalized_y;
-        (*mag_table)[mag_idx].quad_error = quad_error;
+        (*mag_table)[mag_idx].quad_error   = quad_error;
     }
 }
 
