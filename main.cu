@@ -73,22 +73,19 @@ int main(int argc, char *argv[]) {
     // skriv ut en text här hur man refererar till programmet om man publicerar
     // vetenskapliga resultat. OSAN POSITIONING; H-H. Fuxelius
 
-
     sprintf(buffer_Z,"%s",argv[1]);   // *.sqlite3
-
-
 
     // Reads in magnetometer data from database (table kinetics) to magtable and returns
     // table length kinetics_len
     kinetics2record(buffer_Z, &mag_table, &mag_len);
 
-
     // Creates an arc_table which is a partitioning of mxt, myt of a chunk_size
     // arc_table[].left_mag_idx and arc_table[].right_mag_idx points out each arcs border
     // These arcs partition the entire mag_table
+    int wished_size = 200; // actual arc_size is returned dependable on WARP_SIZE=32 for efficiency
+    int arc_size;           // The calculated length of elements in an arc, wished_size is only a wish ;)
+    slice2arc_record(&arc_table, &arc_len, &mag_table, &mag_len, wished_size, &arc_size);
 
-    int chunk_size = 200;
-    slice2arc_record(&arc_table, &arc_len, &mag_table, &mag_len, chunk_size);
 
     #ifdef DEBUG_INFO_1
         // Proves that the pointers are correct in arc_table
@@ -108,12 +105,28 @@ int main(int argc, char *argv[]) {
     #endif
 
 
-
+    // Run histogram on each arc, and store its results in arc_table
+    int bin   = 5;
+    int range = 100; // => (-500,+500)
+    int cut_off = 5;
     for (int arc_idx=0; arc_idx<arc_len; arc_idx++) {
-        histogram(&arc_table, &arc_len, &mag_table, &mag_len, arc_idx, 5, 100, 5);
+        histogram(&arc_table, &arc_len, &mag_table, &mag_len, arc_idx, bin, range, cut_off);
     }
 
-
+    // print out the info in all arcs
+    #ifdef DEBUG_INFO_1
+        for (int arc_idx=0; arc_idx<arc_len; arc_idx++) {
+            printf("arc_idx %i\n", arc_idx);
+            printf("left_mag_idx %i\n", arc_table[arc_idx].left_mag_idx);
+            printf("right_mag_idx %i\n", arc_table[arc_idx].right_mag_idx);
+            printf("x0 %f\n", arc_table[arc_idx].x0);
+            printf("y0 %f\n", arc_table[arc_idx].y0);
+            printf("scale_r %f\n", arc_table[arc_idx].scale_r);
+            printf("scale_y_axis %f\n", arc_table[arc_idx].scale_y_axis);
+            printf("theta %f\n", arc_table[arc_idx].theta);
+            printf("outlier %i\n\n", arc_table[arc_idx].outlier);
+        }
+    #endif
     //--------------------------------------------------------------------------
 
     int arc_idx = 0;
@@ -141,6 +154,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
 
 
 

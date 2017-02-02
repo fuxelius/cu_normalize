@@ -245,6 +245,9 @@ int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **m
         (*arc_table)[arc_idx].x0 = seed_x;
         (*arc_table)[arc_idx].y0 = seed_y;
         (*arc_table)[arc_idx].scale_r = seed_scale_r;
+        (*arc_table)[arc_idx].scale_y_axis = 1;
+        (*arc_table)[arc_idx].theta = 0;
+        (*arc_table)[arc_idx].outlier = 0;
     }
 
     free(hist_table_mxt_pos);
