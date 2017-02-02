@@ -7,7 +7,7 @@
 #include "makros.h"
 
 // Load sqlite database table kinetics to record in memory
-int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_len) {
+int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
     sqlite3 *conn;
     sqlite3_stmt *res;
     int error = 0;
@@ -35,7 +35,7 @@ int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_
         // printf("%u|\n", *kinetics_len);
     }
 
-    struct mag_record *new_table = (struct mag_record*) malloc((*kinetics_len) * sizeof(struct mag_record));
+    mag_record *new_table = (mag_record*) malloc((*kinetics_len) * sizeof(mag_record));
 
     error = sqlite3_prepare_v2(conn,"SELECT seq_id, mxt, myt FROM kinetics ORDER BY seq_id",1000, &res, &tail);
 

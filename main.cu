@@ -23,7 +23,7 @@
 // 1) kinetics2record - the kinetics file to datastructure magtable
 // 2) gps2arc_record  - Creates arcs pointing into mag_table
 // 3) histogram       - cut off outliers and mark it in mag_table[idx].outlier
-void plot_raw_filtered(struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
+void plot_raw_filtered(arc_record **arc_table, int *arc_len, mag_record **mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
     float mxt;
     float myt;
 
@@ -63,11 +63,12 @@ int main(int argc, char *argv[]) {
     char buffer_Z[100];  // string buffer
 
     int mag_len;
-    struct mag_record *mag_table = NULL; // mag_table is of length kinetics_len
+    //struct mag_record *mag_table = NULL; // mag_table is of length kinetics_len
+    mag_record *mag_table = NULL;
 
     int arc_len;
-    struct arc_record *arc_table = NULL; // arc_table is of length arc_len
-
+    //struct arc_record *arc_table = NULL; // arc_table is of length arc_len
+    arc_record *arc_table = NULL;
 
 
     // skriv ut en text här hur man refererar till programmet om man publicerar
@@ -154,14 +155,18 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
+      //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
+
+
     // malloc device global memory
-    struct mag_record *d_mag_table;
-    int mag_bytes = mag_len * sizeof(struct mag_record);
+    mag_record *d_mag_table;
+    size_t mag_bytes = mag_len * sizeof(mag_record);
     CHECK(cudaMalloc((void **)&d_mag_table, mag_bytes));
     CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
 
-    struct arc_record *d_arc_table;
-    int arc_bytes = arc_len * sizeof(struct arc_record);
+    arc_record *d_arc_table;
+    size_t arc_bytes = arc_len * sizeof(arc_record);
     CHECK(cudaMalloc((void **)&d_arc_table, arc_bytes));
     CHECK(cudaMemcpy(d_arc_table, arc_table, arc_bytes, cudaMemcpyHostToDevice));
 
@@ -170,6 +175,7 @@ int main(int argc, char *argv[]) {
     int dimx = 32;
     dim3 block(dimx, 1);
     dim3 grid(mag_len / block.x + 1, 1);
+    //dim3 grid(800, 1);
 
     //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
 
@@ -179,12 +185,12 @@ int main(int argc, char *argv[]) {
 
     CHECK(cudaGetLastError());
 
-    CHECK(cudaMemcpy(mag_table, d_mag_table, mag_bytes, cudaMemcpyDeviceToHost));
-    CHECK(cudaMemcpy(arc_table, d_arc_table, arc_bytes, cudaMemcpyDeviceToHost));
+    //CHECK(cudaMemcpy(mag_table, d_mag_table, mag_bytes, cudaMemcpyDeviceToHost));
+    //CHECK(cudaMemcpy(arc_table, d_arc_table, arc_bytes, cudaMemcpyDeviceToHost));
 
     // free device global memory
-    CHECK(cudaFree(d_mag_table));
-    CHECK(cudaFree(d_arc_table));
+    //CHECK(cudaFree(d_mag_table));
+    //CHECK(cudaFree(d_arc_table));
 
     // reset device
     CHECK(cudaDeviceReset());

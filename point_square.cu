@@ -61,75 +61,80 @@ void point_square(float mxt, float myt, float x0, float y0, float scale_r, float
 
 
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-__global__ void point_square_GPU(struct arc_record **arc_table, int arc_len, struct mag_record **mag_table, int mag_len, int arc_size) {
+__global__ void point_square_GPU(arc_record **arc_table, int arc_len, mag_record **mag_table, int mag_len, int arc_size) {
 
-    int x_blockIdx  = 9; // simulating
-    int x_blockDim  = 32; // simulating
-    int x_threadIdx = 27; // simulating
-    int idx = x_blockIdx * x_blockDim + x_threadIdx; // simulating idx = 315
+    // int x_blockIdx  = 9; // simulating
+    // int x_blockDim  = 32; // simulating
+    // int x_threadIdx = 27; // simulating
+    // int idx = x_blockIdx * x_blockDim + x_threadIdx; // simulating idx = 315
 
-    //int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
     int arc_idx = idx / arc_size; // whole number
     int mag_idx = idx;
+
+    //printf("idx=%i arc_idx=%i mxt=%f\n", idx, arc_idx, (*arc_table)[0].left_mag_idx);
+    printf("idx=%i arc_idx=%i\n", idx, arc_idx);
 
     //int arc_idx = 1; // beräkna från threadIdx.x, blockIdx.x , blockDim.x
     //int mag_idx = 5;   // beräkna från threadIdx.x, blockIdx.x, blockDim.x
 
-    if ((idx < mag_len) && !((*mag_table)[mag_idx].outlier)) {
-        // mag_table
-        float mxt = (*mag_table)[mag_idx].mxt;
-        float myt = (*mag_table)[mag_idx].myt;
-
-        // arc_table
-        float x0            = (*arc_table)[arc_idx].x0;
-        float y0            = (*arc_table)[arc_idx].y0;
-        float scale_r       = (*arc_table)[arc_idx].scale_r;
-        float scale_y_axis  = (*arc_table)[arc_idx].scale_y_axis;
-        float theta         = (*arc_table)[arc_idx].theta;
-
-        //printf("raw,%f,%f\n", mxt, myt);
-
-        float trans_x = (mxt - x0);  // move plane to set origo to in middle of ellipse
-        float trans_y = (myt - y0);  // move plane to set origo to in middle of ellipse
-
-        //printf("trans,%f,%f\n", trans_x, trans_y);
-
-        // Vector is individual for each rotated pair (mx,my)
-        // unless they are situated on a perfect circle which
-        // measured values are NOT!! (otherwise v would be r)
-
-        // https://en.wikipedia.org/wiki/Rotation_(mathematics)
-        // https://en.wikipedia.org/wiki/C_mathematical_functions
-
-        float rotate_x = trans_x * cosf(theta) - trans_y * sinf(theta);  // Rotate theta degrees
-        float rotate_y = trans_x * sinf(theta) + trans_y * cosf(theta);  // Rotate theta degrees
-
-        //printf("rotate,%f,%f\n", rotate_x, rotate_y);
-
-        float scale_x = rotate_x;
-        float scale_y = rotate_y * scale_y_axis;                         // Scale y-axis to make the ellips to a cicle
-
-        //printf("scale,%f,%f\n", scale_x, scale_y); // För R-plot
-
-        rotate_x = scale_x * cosf(-theta) - scale_y * sinf(-theta);      // Rotate -theta degrees (back)
-        rotate_y = scale_x * sinf(-theta) + scale_y * cosf(-theta);      // Rotate -theta degrees (back)
-
-        //printf("rotate back ,%f,%f\n", rotate_x, rotate_y);
-
-        float normalized_x = rotate_x * scale_r;                        // Returns x,y normalized to unit circle
-        float normalized_y = rotate_y * scale_r;
-
-        //printf("normalized ,%f,%f\n", normalized_x, normalized_y);
-
-        float quad_error = powf(sqrtf(powf(normalized_x,2) + powf(normalized_y,2)) - 1,2); // Returns square error from unity cicle
-
-        //printf("quad_error,%f\n", quad_error);
-
-        // Write back result
-        (*mag_table)[mag_idx].normalized_x = normalized_x;
-        (*mag_table)[mag_idx].normalized_y = normalized_y;
-        (*mag_table)[mag_idx].quad_error   = quad_error;
-    }
+    //  if ((idx < mag_len) && !((*mag_table)[mag_idx].outlier)) {
+    //     // mag_table
+    //     float mxt = (*mag_table)[mag_idx].mxt;
+    //     float myt = (*mag_table)[mag_idx].myt;
+    //
+    //     // arc_table
+    //     float x0            = (*arc_table)[arc_idx].x0;
+    //     float y0            = (*arc_table)[arc_idx].y0;
+    //     float scale_r       = (*arc_table)[arc_idx].scale_r;
+    //     float scale_y_axis  = (*arc_table)[arc_idx].scale_y_axis;
+    //     float theta         = (*arc_table)[arc_idx].theta;
+    //
+    //     //printf("raw,%f,%f\n", mxt, myt);
+    //
+    //     //puts("as\n");
+    //
+    //     float trans_x = (mxt - x0);  // move plane to set origo to in middle of ellipse
+    //     float trans_y = (myt - y0);  // move plane to set origo to in middle of ellipse
+    //
+    //     //printf("trans,%f,%f\n", trans_x, trans_y);
+    //
+    //     // Vector is individual for each rotated pair (mx,my)
+    //     // unless they are situated on a perfect circle which
+    //     // measured values are NOT!! (otherwise v would be r)
+    //
+    //     // https://en.wikipedia.org/wiki/Rotation_(mathematics)
+    //     // https://en.wikipedia.org/wiki/C_mathematical_functions
+    //
+    //     float rotate_x = trans_x * cosf(theta) - trans_y * sinf(theta);  // Rotate theta degrees
+    //     float rotate_y = trans_x * sinf(theta) + trans_y * cosf(theta);  // Rotate theta degrees
+    //
+    //     //printf("rotate,%f,%f\n", rotate_x, rotate_y);
+    //
+    //     float scale_x = rotate_x;
+    //     float scale_y = rotate_y * scale_y_axis;                         // Scale y-axis to make the ellips to a cicle
+    //
+    //     //printf("scale,%f,%f\n", scale_x, scale_y); // För R-plot
+    //
+    //     rotate_x = scale_x * cosf(-theta) - scale_y * sinf(-theta);      // Rotate -theta degrees (back)
+    //     rotate_y = scale_x * sinf(-theta) + scale_y * cosf(-theta);      // Rotate -theta degrees (back)
+    //
+    //     //printf("rotate back ,%f,%f\n", rotate_x, rotate_y);
+    //
+    //     float normalized_x = rotate_x * scale_r;                        // Returns x,y normalized to unit circle
+    //     float normalized_y = rotate_y * scale_r;
+    //
+    //     //printf("normalized ,%f,%f\n", normalized_x, normalized_y);
+    //
+    //     float quad_error = powf(sqrtf(powf(normalized_x,2) + powf(normalized_y,2)) - 1,2); // Returns square error from unity cicle
+    //
+    //     //printf("quad_error,%f\n", quad_error);
+    //
+    //     // Write back result
+    //     (*mag_table)[mag_idx].normalized_x = normalized_x; // <----------------- krashar, kanske inte får skriva tillbaka???
+    //     (*mag_table)[mag_idx].normalized_y = normalized_y;
+    //     (*mag_table)[mag_idx].quad_error   = quad_error;
+    //  }
 }
 
 
