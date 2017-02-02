@@ -63,7 +63,7 @@ __global__ void point_square_GPU(float mxt, float myt, float x0, float y0, float
 
 }
 
-// // CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
+// CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
 // __global__ void point_square_GPU(struct meta_record **meta_table, int *meta_len, struct arc_record **arc_table, int *arc_len,
 //                                                                                  struct mag_record **mag_table, int *mag_len) {
 //

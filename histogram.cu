@@ -41,8 +41,11 @@ int has_cut_off_rev(int** hist_table, int range, int cut_off) {
 // range = the number of bins in positive and negative direction (now 100)
 // cut_off = outer bins are cut off if lower than cut_off (now 3)
 
-int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len,
-                                             int left_arc_idx, int right_arc_idx, int bin, int range, int cut_off) {
+int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **mag_table, int *mag_len, int arc_idx,
+                                                                                          int bin, int range, int cut_off) {
+
+    int left_arc_idx  = arc_idx;
+    int right_arc_idx = arc_idx;
 
     puts("\n>All arcs in mag_table");
 
@@ -239,9 +242,9 @@ int histogram(struct arc_record **arc_table, int *arc_len, struct mag_record **m
     for (int arc_idx = left_arc_idx; arc_idx <= right_arc_idx; arc_idx++) {
         printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
 
-        // (*arc_table)[arc_idx].seed_x = seed_x;
-        // (*arc_table)[arc_idx].seed_y = seed_y;
-        // (*arc_table)[arc_idx].seed_scale_r = seed_scale_r;
+        (*arc_table)[arc_idx].x0 = seed_x;
+        (*arc_table)[arc_idx].y0 = seed_y;
+        (*arc_table)[arc_idx].scale_r = seed_scale_r;
     }
 
     free(hist_table_mxt_pos);

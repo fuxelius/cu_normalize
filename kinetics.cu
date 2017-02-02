@@ -11,7 +11,7 @@ int kinetics2record(char *db_name, struct mag_record **mag_table, int *kinetics_
     sqlite3 *conn;
     sqlite3_stmt *res;
     int error = 0;
-    const char *errMSG;
+    //const char *errMSG;
     const char *tail;
 
     //int kinetics_len;          // The length of the kinetics table

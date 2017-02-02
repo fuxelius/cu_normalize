@@ -9,7 +9,7 @@
 #include "makros.h"
 
 #include "histogram.h"
-#include "gps2arc.h"
+#include "slice2arc.h"
 #include "kinetics.h"
 
 #include "point_square.h"
@@ -83,18 +83,12 @@ int main(int argc, char *argv[]) {
     kinetics2record(buffer_Z, &mag_table, &mag_len);
 
 
-    // for (int row_cnt=0; row_cnt<kinetics_len; row_cnt++) {
-    //     printf(">> %u | ",mag_table[row_cnt].seq_id);
-    //     printf("%f | ",mag_table[row_cnt].mxt);
-    //     printf("%f\n",mag_table[row_cnt].myt);
-    // }
-
-
-    // Creates an arc_table which is a partitioning of mxt, myt between gps positions
+    // Creates an arc_table which is a partitioning of mxt, myt of a chunk_size
     // arc_table[].left_mag_idx and arc_table[].right_mag_idx points out each arcs border
     // These arcs partition the entire mag_table
 
-    gps2arc_record(buffer_Z, &arc_table, &arc_len, &mag_table, &mag_len);
+    int chunk_size = 200;
+    slice2arc_record(&arc_table, &arc_len, &mag_table, &mag_len, chunk_size);
 
     #ifdef DEBUG_INFO_1
         // Proves that the pointers are correct in arc_table
@@ -115,51 +109,14 @@ int main(int argc, char *argv[]) {
 
 
 
-
-
-    //------------------------------- experiment -------------------------------
-
-    // 1) this code operates on all arcs, one at a time
-    for (int arc_idx = 0; arc_idx < arc_len; arc_idx++) {
-
-        // bin=5; range=200 => (-1000,1000); cut_off<5
-        //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 0, 0, 5, 100, 5);
+    for (int arc_idx=0; arc_idx<arc_len; arc_idx++) {
+        histogram(&arc_table, &arc_len, &mag_table, &mag_len, arc_idx, 5, 100, 5);
     }
 
-    // int left_arc_idx = 0;
-    // int right_arc_idx = 18;
-
-
-
-    int left_arc_idx = 0;
-    int right_arc_idx = arc_len-1;
-
-    printf("arc_len=%i", arc_len-1);
-
-
-
-    // <-------------------------------------- skapa meta_table här, som partitionerar i arcs i storlek N
-
-
-    // 2) all mag pointsfrom arc 0-18
-    histogram(&arc_table, &arc_len, &mag_table, &mag_len, left_arc_idx, right_arc_idx, 5, 100, 5);
-
-    // ---> funktion för att skriva ut antalet arcs i hela databasen
-    // ---> skriv funktion för att plotta i R (seq_id,mxt,myt)
-    // ---> plotta alla origo från alla arcs och se hur dom hamnar:
-    //plot_raw_filtered(&arc_table, &arc_len, &mag_table, &mag_len, left_arc_idx, right_arc_idx);
-
-    // använd -v, verbose mode för att skriva ut ALL debug info i en katalog
-
-    // 3) all mag points from in arc 2 is negative
-    //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 2, 2, 5, 100, 3);
-
-    // 4) all mag points from in arc 2 is negative
-    //histogram(&arc_table, &arc_len, &mag_table, &mag_len, 17, 17, 5, 100, 3);
 
     //--------------------------------------------------------------------------
 
-
+    int arc_idx = 0;
 
     // tested model
     float mxt      =  200;
@@ -174,7 +131,7 @@ int main(int argc, char *argv[]) {
     float normalized_y;  // Return value
     float quad_error;    // Return value
 
-    for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
+    for (int mag_idx = arc_table[arc_idx].left_mag_idx; mag_idx <= arc_table[arc_idx].right_mag_idx; mag_idx++) {
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
@@ -193,73 +150,73 @@ int main(int argc, char *argv[]) {
 
 // ----------------------- CUDA START -----------------------
 
-    // set up data size of matrix
-    int nx = 1 << 14;
-    int ny = 1 << 14;
-
-    int nxy = nx * ny;
-    int nBytes = nxy * sizeof(float);
-    printf("Matrix size: nx %d ny %d\n", nx, ny);
-
-    // malloc host memory
-    float *h_A, *h_B, *hostRef, *gpuRef;
-    h_A = (float *)malloc(nBytes);
-    h_B = (float *)malloc(nBytes);
-    hostRef = (float *)malloc(nBytes);
-    gpuRef = (float *)malloc(nBytes);
-
-    // initialize data at host side
-    double iStart = seconds();
-    initialData(h_A, nxy);
-    initialData(h_B, nxy);
-    double iElaps = seconds() - iStart;
-    printf("Matrix initialization elapsed %f sec\n", iElaps);
-
-    memset(hostRef, 0, nBytes);
-    memset(gpuRef, 0, nBytes);
-
-    // malloc device global memory
-    float *d_MatA, *d_MatB, *d_MatC;
-    CHECK(cudaMalloc((void **)&d_MatA, nBytes));
-    CHECK(cudaMalloc((void **)&d_MatB, nBytes));
-    CHECK(cudaMalloc((void **)&d_MatC, nBytes));
-
-    // transfer data from host to device
-    CHECK(cudaMemcpy(d_MatA, h_A, nBytes, cudaMemcpyHostToDevice));
-    CHECK(cudaMemcpy(d_MatB, h_B, nBytes, cudaMemcpyHostToDevice));
-
-    // invoke kernel at host side
-    int dimx = 32;
-    dim3 block(dimx, 1);
-    dim3 grid((nx + block.x - 1) / block.x, ny);
-
-    iStart = seconds();
-    sumMatrixOnGPUMix<<<grid, block>>>(d_MatA, d_MatB, d_MatC, nx, ny);
-    CHECK(cudaDeviceSynchronize());
-    iElaps = seconds() - iStart;
-    printf("sumMatrixOnGPU2D <<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x, grid.y, block.x, block.y, iElaps);
-    // check kernel error
-    CHECK(cudaGetLastError());
-
-    // copy kernel result back to host side
-    CHECK(cudaMemcpy(gpuRef, d_MatC, nBytes, cudaMemcpyDeviceToHost));
-
-    // check device results
-    //checkResult(hostRef, gpuRef, nxy);
-
-    // free device global memory
-    CHECK(cudaFree(d_MatA));
-    CHECK(cudaFree(d_MatB));
-    CHECK(cudaFree(d_MatC));
-
-    // free host memory
-    free(h_A);
-    free(h_B);
-    free(hostRef);
-    free(gpuRef);
-
-    // reset device
-    CHECK(cudaDeviceReset());
+    // // set up data size of matrix
+    // int nx = 1 << 14;
+    // int ny = 1 << 14;
+    //
+    // int nxy = nx * ny;
+    // int nBytes = nxy * sizeof(float);
+    // printf("Matrix size: nx %d ny %d\n", nx, ny);
+    //
+    // // malloc host memory
+    // float *h_A, *h_B, *hostRef, *gpuRef;
+    // h_A = (float *)malloc(nBytes);
+    // h_B = (float *)malloc(nBytes);
+    // hostRef = (float *)malloc(nBytes);
+    // gpuRef = (float *)malloc(nBytes);
+    //
+    // // initialize data at host side
+    // double iStart = seconds();
+    // initialData(h_A, nxy);
+    // initialData(h_B, nxy);
+    // double iElaps = seconds() - iStart;
+    // printf("Matrix initialization elapsed %f sec\n", iElaps);
+    //
+    // memset(hostRef, 0, nBytes);
+    // memset(gpuRef, 0, nBytes);
+    //
+    // // malloc device global memory
+    // float *d_MatA, *d_MatB, *d_MatC;
+    // CHECK(cudaMalloc((void **)&d_MatA, nBytes));
+    // CHECK(cudaMalloc((void **)&d_MatB, nBytes));
+    // CHECK(cudaMalloc((void **)&d_MatC, nBytes));
+    //
+    // // transfer data from host to device
+    // CHECK(cudaMemcpy(d_MatA, h_A, nBytes, cudaMemcpyHostToDevice));
+    // CHECK(cudaMemcpy(d_MatB, h_B, nBytes, cudaMemcpyHostToDevice));
+    //
+    // // invoke kernel at host side
+    // int dimx = 32;
+    // dim3 block(dimx, 1);
+    // dim3 grid((nx + block.x - 1) / block.x, ny);
+    //
+    // iStart = seconds();
+    // sumMatrixOnGPUMix<<<grid, block>>>(d_MatA, d_MatB, d_MatC, nx, ny);
+    // CHECK(cudaDeviceSynchronize());
+    // iElaps = seconds() - iStart;
+    // printf("sumMatrixOnGPU2D <<<(%d,%d), (%d,%d)>>> elapsed %f sec\n", grid.x, grid.y, block.x, block.y, iElaps);
+    // // check kernel error
+    // CHECK(cudaGetLastError());
+    //
+    // // copy kernel result back to host side
+    // CHECK(cudaMemcpy(gpuRef, d_MatC, nBytes, cudaMemcpyDeviceToHost));
+    //
+    // // check device results
+    // //checkResult(hostRef, gpuRef, nxy);
+    //
+    // // free device global memory
+    // CHECK(cudaFree(d_MatA));
+    // CHECK(cudaFree(d_MatB));
+    // CHECK(cudaFree(d_MatC));
+    //
+    // // free host memory
+    // free(h_A);
+    // free(h_B);
+    // free(hostRef);
+    // free(gpuRef);
+    //
+    // // reset device
+    // CHECK(cudaDeviceReset());
 
 // ------------------------ CUDA END ------------------------
 
