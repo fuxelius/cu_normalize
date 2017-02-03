@@ -1,4 +1,4 @@
-#define WARP_SIZE 32
+#define BLOCK_SIZE 256
 
 typedef struct {  // Magnetometer data implement as an array of structs
     int seq_id;        // seq_id from database
@@ -32,8 +32,10 @@ typedef struct {  // Magnetometer data implement as an array of structs
     float scale_y_axis;     // = 1 första gången i iterationen
     float theta;            // = 0 första gången i iterationen
 
-    bool outlier;           // Set outliers to 1 otherwise 0
-
     float ls;               // least square for an iteration of the elements in arc_table[arc_idx]
-    int deepth;             // The depth of iteration
+    int deepth;             // The total depth of iteration
+    int iter_cnt;           // If lest square is not lower for iter_cnt cycles
+    int finish;             // then set the thread for this arc to finish
+
+    bool outlier;           // Set outliers to 1 otherwise 0
 } arc_record;

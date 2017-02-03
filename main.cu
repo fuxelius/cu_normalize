@@ -83,9 +83,8 @@ int main(int argc, char *argv[]) {
     // Creates an arc_table which is a partitioning of mxt, myt of a chunk_size
     // arc_table[].left_mag_idx and arc_table[].right_mag_idx points out each arcs border
     // These arcs partition the entire mag_table
-    int wished_size = 200; // actual arc_size is returned dependable on WARP_SIZE=32 for efficiency
-    int arc_size;           // The calculated length of elements in an arc, wished_size is only a wish ;)
-    slice2arc_record(&arc_table, &arc_len, &mag_table, &mag_len, wished_size, &arc_size);
+    int arc_size = 1024;           // Should be a multiple of BLOCK_SIZE=256; CUDA stuff
+    slice2arc_record(&arc_table, &arc_len, mag_table, mag_len, arc_size);
 
 
     #ifdef DEBUG_INFO_1
@@ -172,7 +171,7 @@ int main(int argc, char *argv[]) {
 
 
     // invoke kernel at host side
-    int dimx = 32;
+    int dimx = BLOCK_SIZE; // < 1024
     dim3 block(dimx, 1);
     dim3 grid(mag_len / block.x + 1, 1);
     //dim3 grid(800, 1);

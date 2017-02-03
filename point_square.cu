@@ -72,23 +72,26 @@ __global__ void point_square_GPU(arc_record *arc_table, int arc_len, mag_record 
     int arc_idx = idx / arc_size; // whole number
     int mag_idx = idx;
 
-    printf("idx=%i arc_idx=%i\n", idx, arc_idx);
     //printf("idx=%i arc_idx=%i\n", idx, arc_idx);
 
-    //int arc_idx = 1; // beräkna från threadIdx.x, blockIdx.x , blockDim.x
-    //int mag_idx = 5;   // beräkna från threadIdx.x, blockIdx.x, blockDim.x
-
-     if ((idx < mag_len) && !(mag_table[mag_idx].outlier)) {
+    if ((idx < mag_len) && !(mag_table[mag_idx].outlier)) {
         // mag_table
         float mxt = mag_table[mag_idx].mxt;
         float myt = mag_table[mag_idx].myt;
 
-        // arc_table
-        float x0            = arc_table[arc_idx].x0;
-        float y0            = arc_table[arc_idx].y0;
-        float scale_r       = arc_table[arc_idx].scale_r;
-        float scale_y_axis  = arc_table[arc_idx].scale_y_axis;
-        float theta         = arc_table[arc_idx].theta;
+        // // arc_table
+        // float x0            = arc_table[arc_idx].x0;
+        // float y0            = arc_table[arc_idx].y0;
+        // float scale_r       = arc_table[arc_idx].scale_r;
+        // float scale_y_axis  = arc_table[arc_idx].scale_y_axis;
+        // float theta         = arc_table[arc_idx].theta;
+
+        // arc_table; ga_uppsala2
+        float x0            = 16;
+        float y0            = -124;
+        float scale_r       = 0.0041;
+        float scale_y_axis  = 1.045;
+        float theta         = 0;
 
         //printf("raw,%f,%f\n", mxt, myt);
 
@@ -124,38 +127,15 @@ __global__ void point_square_GPU(arc_record *arc_table, int arc_len, mag_record 
 
         //printf("normalized ,%f,%f\n", normalized_x, normalized_y);
 
+        printf("cuda,%f,%f\n", scale_x, scale_y);
+
         float quad_error = powf(sqrtf(powf(normalized_x,2) + powf(normalized_y,2)) - 1,2); // Returns square error from unity cicle
 
-        printf("quad_error,%f\n", quad_error);
+        //printf("quad_error,%f\n", quad_error);
 
         // Write back result
         mag_table[mag_idx].normalized_x = normalized_x; // <----------------- krashar, kanske inte får skriva tillbaka???
         mag_table[mag_idx].normalized_y = normalized_y;
         mag_table[mag_idx].quad_error   = quad_error;
      }
-}
-
-
-
-// grid 2D block 1D
-__global__ void sumMatrixOnGPUMix(float *MatA, float *MatB, float *MatC, int nx, int ny)
-{
-    unsigned int ix = threadIdx.x + blockIdx.x * blockDim.x;
-    unsigned int iy = blockIdx.y;
-    unsigned int idx = iy * nx + ix;
-
-    if (ix < nx && iy < ny)
-        MatC[idx] = MatA[idx] + MatB[idx];
-}
-
-
-void initialData(float *ip, const int size) {
-    int i;
-
-    for(i = 0; i < size; i++)
-    {
-        ip[i] = (float)(rand() & 0xFF) / 10.0f;
-    }
-
-    return;
 }
