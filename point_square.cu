@@ -76,8 +76,8 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
 
     if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
         // mag_table
-        float mxt = mag_table[mag_idx].mxt;
-        float myt = mag_table[mag_idx].myt;
+        short mxt = mag_table[mag_idx].mxt;
+        short myt = mag_table[mag_idx].myt;
 
         // // chunk_table
         // float x0            = chunk_table[chunk_idx].x0;
@@ -127,7 +127,7 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
 
         //printf("normalized ,%f,%f\n", normalized_x, normalized_y);
 
-        printf("cuda,%f,%f\n", scale_x, scale_y);
+        //printf("cuda,%f,%f\n", scale_x, scale_y);
 
         float quad_error = powf(sqrtf(powf(normalized_x,2) + powf(normalized_y,2)) - 1,2); // Returns square error from unity cicle
 

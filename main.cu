@@ -172,9 +172,11 @@ int main(int argc, char *argv[]) {
     // invoke kernel at host side
     int dimx = BLOCK_SIZE; // < chunk_size
     dim3 block(dimx, 1);
-    dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+    //dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+    dim3 grid((mag_len )/ BLOCK_SIZE + 1, 1);
 
     point_square_GPU<<<grid, block>>>(d_chunk_table, chunk_len, d_mag_table, mag_len, chunk_size);
+    //point_square_GPU<<<4, 256>>>(d_chunk_table, chunk_len, d_mag_table, mag_len, chunk_size);
 
     CHECK(cudaDeviceSynchronize());
 
