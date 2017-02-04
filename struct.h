@@ -2,9 +2,9 @@
 
 typedef struct {  // Magnetometer data implement as an array of structs
     int seq_id;        // seq_id from database
-    float mxt;         // CUDA single precision
-    float myt;         // CUDA single precision
-    bool outlier;      // Set outliers to 1 otherwise 0
+    short mxt;         // 16-bit
+    short myt;         // 16-bit
+    bool disable;      // Set outliers to 1 otherwise 0
 
     // results from CUDA iteration
     float normalized_x;

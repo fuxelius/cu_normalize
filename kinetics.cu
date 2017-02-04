@@ -53,7 +53,7 @@ int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
         new_table[row_cnt].seq_id = sqlite3_column_int(res, 0);
         new_table[row_cnt].mxt = sqlite3_column_double(res, 1);
         new_table[row_cnt].myt = sqlite3_column_double(res, 2);
-        new_table[row_cnt].outlier = 0;
+        new_table[row_cnt].disable = 0;
 
         // printf("%u | ",new_table[row_cnt].seq_id);
         // printf("%f | ",new_table[row_cnt].mxt);

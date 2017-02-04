@@ -23,17 +23,17 @@
 // 1) kinetics2record - the kinetics file to datastructure magtable
 // 2) gps2arc_record  - Creates arcs pointing into mag_table
 // 3) histogram       - cut off outliers and mark it in mag_table[idx].outlier
-void plot_raw_filtered(arc_record **arc_table, int *arc_len, mag_record **mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
+void plot_raw_filtered(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
     float mxt;
     float myt;
 
     puts("mxt, myt");
 
-    for (int mag_idx = (*arc_table)[left_arc_idx].left_mag_idx; mag_idx <= (*arc_table)[right_arc_idx].right_mag_idx; mag_idx++) {
-        mxt = (*mag_table)[mag_idx].mxt;
-        myt = (*mag_table)[mag_idx].myt;
+    for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
+        mxt = mag_table[mag_idx].mxt;
+        myt = mag_table[mag_idx].myt;
 
-        if (!(*mag_table)[mag_idx].outlier) {
+        if (!mag_table[mag_idx].disable) {
             printf("%f,%f\n", mxt, myt);
         }
     }
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
     int range = 100; // => (-500,+500)
     int cut_off = 5;
     for (int arc_idx=0; arc_idx<arc_len; arc_idx++) {
-        histogram(&arc_table, &arc_len, &mag_table, &mag_len, arc_idx, bin, range, cut_off);
+        histogram(arc_table, &arc_len, mag_table, &mag_len, arc_idx, bin, range, cut_off);
     }
 
     // print out the info in all arcs
@@ -148,54 +148,54 @@ int main(int argc, char *argv[]) {
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
-        if (!mag_table[mag_idx].outlier) {
+        if (!mag_table[mag_idx].disable) {
             point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate, &normalized_x, &normalized_y, &quad_error);
             //printf("%f,%f\n", normalized_x, normalized_y);
         }
     }
 
-
-      //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
-
-
-    // malloc device global memory
-    mag_record *d_mag_table;
-    size_t mag_bytes = mag_len * sizeof(mag_record);
-    CHECK(cudaMalloc((void **)&d_mag_table, mag_bytes));
-    CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
-
-    arc_record *d_arc_table;
-    size_t arc_bytes = arc_len * sizeof(arc_record);
-    CHECK(cudaMalloc((void **)&d_arc_table, arc_bytes));
-    CHECK(cudaMemcpy(d_arc_table, arc_table, arc_bytes, cudaMemcpyHostToDevice));
-
-
-    // invoke kernel at host side
-    int dimx = BLOCK_SIZE; // < 1024
-    dim3 block(dimx, 1);
-    dim3 grid(mag_len / block.x + 1, 1);
-    //dim3 grid(800, 1);
-
-    //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
-
-    point_square_GPU<<<grid, block>>>(d_arc_table, arc_len, d_mag_table, mag_len, arc_size);
-
-    CHECK(cudaDeviceSynchronize());
-
-    CHECK(cudaGetLastError());
-
-    CHECK(cudaMemcpy(mag_table, d_mag_table, mag_bytes, cudaMemcpyDeviceToHost));
-    CHECK(cudaMemcpy(arc_table, d_arc_table, arc_bytes, cudaMemcpyDeviceToHost));
-
-    // free device global memory
-    CHECK(cudaFree(d_mag_table));
-    CHECK(cudaFree(d_arc_table));
-
-    // reset device
-    CHECK(cudaDeviceReset());
-
-    free(mag_table);
-    free(arc_table);
+    //
+    //   //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
+    //
+    //
+    // // malloc device global memory
+    // mag_record *d_mag_table;
+    // size_t mag_bytes = mag_len * sizeof(mag_record);
+    // CHECK(cudaMalloc((void **)&d_mag_table, mag_bytes));
+    // CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
+    //
+    // arc_record *d_arc_table;
+    // size_t arc_bytes = arc_len * sizeof(arc_record);
+    // CHECK(cudaMalloc((void **)&d_arc_table, arc_bytes));
+    // CHECK(cudaMemcpy(d_arc_table, arc_table, arc_bytes, cudaMemcpyHostToDevice));
+    //
+    //
+    // // invoke kernel at host side
+    // int dimx = BLOCK_SIZE; // < 1024
+    // dim3 block(dimx, 1);
+    // dim3 grid(mag_len / block.x + 1, 1);
+    // //dim3 grid(800, 1);
+    //
+    // //point_square_GPU(&arc_table, arc_len, &mag_table, mag_len, arc_size);
+    //
+    // point_square_GPU<<<grid, block>>>(d_arc_table, arc_len, d_mag_table, mag_len, arc_size);
+    //
+    // CHECK(cudaDeviceSynchronize());
+    //
+    // CHECK(cudaGetLastError());
+    //
+    // CHECK(cudaMemcpy(mag_table, d_mag_table, mag_bytes, cudaMemcpyDeviceToHost));
+    // CHECK(cudaMemcpy(arc_table, d_arc_table, arc_bytes, cudaMemcpyDeviceToHost));
+    //
+    // // free device global memory
+    // CHECK(cudaFree(d_mag_table));
+    // CHECK(cudaFree(d_arc_table));
+    //
+    // // reset device
+    // CHECK(cudaDeviceReset());
+    //
+    // free(mag_table);
+    // free(arc_table);
 
     return 0;
 
