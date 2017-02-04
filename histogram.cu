@@ -34,20 +34,20 @@ int has_cut_off_rev(int* hist_table, int range, int cut_off) {
 // histogram takes the left and right index into magtable from chunk_table to pick out magrecords (mxt,myt) . It loops
 // over it from left to right and creates a histogram in four hist_table:s. First all outliers are removed and the the seed
 // values for the iterative parameters are set. In a later stage a CUDA function takes the seed values to do an  iteration
-// over each arc and set the values (mfv, rho) for each arc
-// left_arc_idx  = pointer into left arc in mag_table
-// right_arc_idx = pointer into right arc of another or the same arc in mag_table
+// over each chunk and set the values (mfv, rho) for each chunk
+// left_chunk_idx  = pointer into left chunk in mag_table
+// right_chunk_idx = pointer into right chunk of another or the same chunk in mag_table
 // bin = the size of each bin (now 5)
 // range = the number of bins in positive and negative direction (now 100)
 // cut_off = outer bins are cut off if lower than cut_off (now 3)
 
-int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, int *mag_len, int arc_idx,
+int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, int *mag_len, int chunk_idx,
                                                                                           int bin, int range, int cut_off) {
 
-    int left_arc_idx  = arc_idx;
-    int right_arc_idx = arc_idx;
+    int left_chunk_idx  = chunk_idx;
+    int right_chunk_idx = chunk_idx;
 
-    //puts("\n>All arcs in mag_table");
+    //puts("\n>All chunks in mag_table");
 
     int *hist_table_mxt_pos = (int*) malloc(range * sizeof(int)); // positive values
     int *hist_table_mxt_neg = (int*) malloc(range * sizeof(int)); // negative values
@@ -59,7 +59,7 @@ int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, 
     memset(hist_table_myt_pos, 0, range * sizeof(int));  // initialize to zeros
     memset(hist_table_myt_neg, 0, range * sizeof(int));  // initialize to zeros
 
-    //puts("\n>Next arc");
+    //puts("\n>Next chunk");
 
     float mxt;
     float myt;
@@ -67,9 +67,9 @@ int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, 
     int mxt_idx; // mxt indexed to hist_tables
     int myt_idx; // mxt indexed to hist_tables
 
-    // travese all mag_records between left_arc_idx and right_arc_idx, constituting multiple arcs. f.ex. 3 arcs at a time
+    // travese all mag_records between left_chunk_idx and right_chunk_idx, constituting multiple chunks. f.ex. 3 chunks at a time
 
-    for (int mag_idx = chunk_table[left_arc_idx].left_mag_idx; mag_idx <= chunk_table[right_arc_idx].right_mag_idx; mag_idx++) {
+    for (int mag_idx = chunk_table[left_chunk_idx].left_mag_idx; mag_idx <= chunk_table[right_chunk_idx].right_mag_idx; mag_idx++) {
 
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
@@ -219,7 +219,7 @@ int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, 
     //printf("y=<%f,%f>\n\n", myt_boundry_low, myt_boundry_high);
 
     // 1) loop throught mxt,myt and set the outliers in mag_table->outlier
-    for (int mag_idx = chunk_table[left_arc_idx].left_mag_idx; mag_idx <= chunk_table[right_arc_idx].right_mag_idx; mag_idx++) {
+    for (int mag_idx = chunk_table[left_chunk_idx].left_mag_idx; mag_idx <= chunk_table[right_chunk_idx].right_mag_idx; mag_idx++) {
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
@@ -238,16 +238,16 @@ int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, 
     float seed_y = (myt_boundry_high + myt_boundry_low) / 2;
     float seed_scale_r = 1 / ( ( ((mxt_boundry_high - mxt_boundry_low) / 2) + ((myt_boundry_high - myt_boundry_low) / 2) ) / 2 );
 
-    // set the same seed for arcs in chunk_table from left_arc_idx to right_arc_idx
-    for (int arc_idx = left_arc_idx; arc_idx <= right_arc_idx; arc_idx++) {
-        //printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
+    // set the same seed for chunks in chunk_table from left_chunk_idx to right_chunk_idx
+    for (int chunk_idx = left_chunk_idx; chunk_idx <= right_chunk_idx; chunk_idx++) {
+        //printf("chunk_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", chunk_idx, seed_x, seed_y, seed_scale_r);
 
-        chunk_table[arc_idx].x0 = seed_x;
-        chunk_table[arc_idx].y0 = seed_y;
-        chunk_table[arc_idx].scale_r = seed_scale_r;
-        chunk_table[arc_idx].scale_y_axis = 1;
-        chunk_table[arc_idx].theta = 0;
-        chunk_table[arc_idx].outlier = 0;
+        chunk_table[chunk_idx].x0 = seed_x;
+        chunk_table[chunk_idx].y0 = seed_y;
+        chunk_table[chunk_idx].scale_r = seed_scale_r;
+        chunk_table[chunk_idx].scale_y_axis = 1;
+        chunk_table[chunk_idx].theta = 0;
+        chunk_table[chunk_idx].outlier = 0;
     }
 
     free(hist_table_mxt_pos);

@@ -72,7 +72,7 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
     int chunk_idx = idx / chunk_size; // whole number
     int mag_idx = idx;
 
-    //printf("idx=%i arc_idx=%i\n", idx, arc_idx);
+    //printf("idx=%i chunk_idx=%i\n", idx, chunk_idx);
 
     if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
         // mag_table
@@ -80,11 +80,11 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
         float myt = mag_table[mag_idx].myt;
 
         // // chunk_table
-        // float x0            = chunk_table[arc_idx].x0;
-        // float y0            = chunk_table[arc_idx].y0;
-        // float scale_r       = chunk_table[arc_idx].scale_r;
-        // float scale_y_axis  = chunk_table[arc_idx].scale_y_axis;
-        // float theta         = chunk_table[arc_idx].theta;
+        // float x0            = chunk_table[chunk_idx].x0;
+        // float y0            = chunk_table[chunk_idx].y0;
+        // float scale_r       = chunk_table[chunk_idx].scale_r;
+        // float scale_y_axis  = chunk_table[chunk_idx].scale_y_axis;
+        // float theta         = chunk_table[chunk_idx].theta;
 
         // chunk_table; ga_uppsala2
         float x0            = 16;
