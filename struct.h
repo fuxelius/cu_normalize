@@ -7,7 +7,7 @@ typedef struct {       // Host only, takes to much space for device (20*10^6 ent
     int seq_id;
     float mfv;
     float rho;
-} result_struct;
+} result_record;
 
 // Magnetometer data implement as an array of structs
 // 33 bytes/record => 20*10^6 entries (2 years) => 660 Mbyte of datastructure

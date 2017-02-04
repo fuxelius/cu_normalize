@@ -65,9 +65,12 @@ int main(int argc, char *argv[]) {
     int mag_len;
     mag_record *mag_table = NULL;
 
+    // This table keeps the returned results on host
+    // initialize to mfv and rho to zeros when filling in seq_id
+    result_record *result_table = NULL;   // identical length to mag_record(mag_len)   <-------------- bygg och returnera denna i kinetics2record
+
     int chunk_len;
     chunk_record *chunk_table = NULL;
-
 
     // skriv ut en text här hur man refererar till programmet om man publicerar
     // vetenskapliga resultat. OSAN POSITIONING; H-H. Fuxelius
@@ -76,7 +79,7 @@ int main(int argc, char *argv[]) {
 
     // Reads in magnetometer data from database (table kinetics) to magtable and returns
     // table length kinetics_len
-    kinetics2record(buffer_Z, &mag_table, &mag_len);
+    kinetics2record(buffer_Z, &mag_table, &result_table, &mag_len);
 
     // Creates an chunk_table which is a partitioning of mxt, myt of a chunk_size
     // chunk_table[].left_mag_idx and chunk_table[].right_mag_idx points out each chunk border
@@ -104,9 +107,9 @@ int main(int argc, char *argv[]) {
 
 
     // Run histogram on each chunk, and store its results in chunk_table
-    int bin   = 5;
-    int range = 100; // => (-500,+500)
-    int cut_off = 5;
+    int bin   = 5;      // size of each bin
+    int range = 100;    // => (-500,+500)
+    int cut_off = 5;    // cut off on both sides of origo where < cut_off in a bin
     for (int chunk_idx=0; chunk_idx<chunk_len; chunk_idx++) {
         histogram(chunk_table, &chunk_len, mag_table, &mag_len, chunk_idx, bin, range, cut_off);
     }
@@ -152,9 +155,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
-      //point_square_GPU(&chunk_table, chunk_len, &mag_table, mag_len, chunk_size);
-
+    // ============================================ CUDA START ============================================
 
     // malloc device global memory
     mag_record *d_mag_table;
@@ -191,6 +192,9 @@ int main(int argc, char *argv[]) {
 
     // reset device
     CHECK(cudaDeviceReset());
+
+    // ============================================ CUDA END ============================================
+
 
     free(mag_table);
     free(chunk_table);

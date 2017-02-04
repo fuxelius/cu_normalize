@@ -7,7 +7,7 @@
 #include "makros.h"
 
 // Load sqlite database table kinetics to record in memory
-int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
+int kinetics2record(char *db_name, mag_record **mag_table, result_record **result_table, int *kinetics_len) {
     sqlite3 *conn;
     sqlite3_stmt *res;
     int error = 0;
@@ -35,7 +35,9 @@ int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
         // printf("%u|\n", *kinetics_len);
     }
 
-    mag_record *new_table = (mag_record*) malloc((*kinetics_len) * sizeof(mag_record));
+    // Both has the same length, separated for space considerations
+    mag_record *temp_mag = (mag_record*) malloc((*kinetics_len) * sizeof(mag_record));
+    result_record *temp_result = (result_record*) malloc((*kinetics_len) * sizeof(result_record));
 
     error = sqlite3_prepare_v2(conn,"SELECT seq_id, mxt, myt FROM kinetics ORDER BY seq_id",1000, &res, &tail);
 
@@ -50,14 +52,17 @@ int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
         //printf("%f | ",  (float)sqlite3_column_double(res, 1));  // dessa bör castas till CUDA single precision = float????
         //printf("%f\n", (float)sqlite3_column_double(res, 2)); // dessa bör castas till CUDA single precision
 
-        //new_table[row_cnt].seq_id = sqlite3_column_int(res, 0);
-        new_table[row_cnt].mxt = sqlite3_column_double(res, 1);
-        new_table[row_cnt].myt = sqlite3_column_double(res, 2);
-        new_table[row_cnt].disable = 0;
+        temp_result[row_cnt].seq_id = sqlite3_column_int(res, 0);
+        temp_result[row_cnt].mfv = 0;       // initialize to 0
+        temp_result[row_cnt].rho = 0;       // initialize to 0
 
-        // printf("%u | ",new_table[row_cnt].seq_id);
-        // printf("%f | ",new_table[row_cnt].mxt);
-        // printf("%f\n",new_table[row_cnt].myt);
+        temp_mag[row_cnt].mxt = sqlite3_column_double(res, 1);
+        temp_mag[row_cnt].myt = sqlite3_column_double(res, 2);
+        temp_mag[row_cnt].disable = 0;
+
+        printf("%u | ",temp_result[row_cnt].seq_id);
+        printf("%i | ",temp_mag[row_cnt].mxt);
+        printf("%i\n",temp_mag[row_cnt].myt);
 
         row_cnt++;
     }
@@ -70,7 +75,7 @@ int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
 
     sqlite3_close(conn);
 
-    *mag_table = new_table;
-
+    *mag_table = temp_mag;
+    *result_table = temp_result;
     return 0;
 }
