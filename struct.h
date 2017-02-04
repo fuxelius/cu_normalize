@@ -19,8 +19,8 @@ typedef struct {       // Host and device
 
 // chunk_record divides mag_table to chunks at a size suitable for normalization
 typedef struct {            // Magnetometer data implement as an array of structs
-    int left_mag_idx;       // left index of an arc in mag_record[]; calculated in slice2arc
-    int right_mag_idx;      // right index of an arc in mag_record[]; calculated in slice2arc
+    int left_mag_idx;       // left index of an chunk in mag_record[]; calculated in slice2chunk
+    int right_mag_idx;      // right index of an chunk in mag_record[]; calculated in slice2chunk
 
     bool outlier;           // Set outliers to 1 otherwise 0
 
@@ -32,8 +32,8 @@ typedef struct {            // Magnetometer data implement as an array of struct
     float theta;            // = 0 första gången i iterationen
 
     // these should probably live in a matrix
-    float ls;               // least square for an iteration of the elements in arc_table[arc_idx]
+    float ls;               // least square for an iteration of the elements in chunk_table[chunk_idx]
     int deepth;             // The total depth of iteration
     int iter_cnt;           // If lest square is not lower for iter_cnt cycles
-    int finish;             // then set the thread for this arc to finish
+    int finish;             // then set the thread for this chunk to finish
 } chunk_record;

@@ -63,11 +63,9 @@ int main(int argc, char *argv[]) {
     char buffer_Z[100];  // string buffer
 
     int mag_len;
-    //struct mag_record *mag_table = NULL; // mag_table is of length kinetics_len
     mag_record *mag_table = NULL;
 
     int chunk_len;
-    //struct  *chunk_table = NULL; // chunk_table is of length chunk_len
     chunk_record *chunk_table = NULL;
 
 
@@ -83,7 +81,7 @@ int main(int argc, char *argv[]) {
     // Creates an chunk_table which is a partitioning of mxt, myt of a chunk_size
     // chunk_table[].left_mag_idx and chunk_table[].right_mag_idx points out each chunk border
     // These chunk partition the entire mag_table
-    int chunk_size = 1024;           // Should be a multiple of BLOCK_SIZE=256; CUDA stuff
+    int chunk_size = 1024;           // Should be a multiple of BLOCK_SIZE (now set to 256); CUDA stuff
     slice2chunk_record(&chunk_table, &chunk_len, mag_table, mag_len, chunk_size);
 
 
