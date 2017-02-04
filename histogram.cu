@@ -31,7 +31,7 @@ int has_cut_off_rev(int* hist_table, int range, int cut_off) {
 }
 
 //====================================================================================================================================
-// histogram takes the left and right index into magtable from arc_table to pick out magrecords (mxt,myt) . It loops
+// histogram takes the left and right index into magtable from chunk_table to pick out magrecords (mxt,myt) . It loops
 // over it from left to right and creates a histogram in four hist_table:s. First all outliers are removed and the the seed
 // values for the iterative parameters are set. In a later stage a CUDA function takes the seed values to do an  iteration
 // over each arc and set the values (mfv, rho) for each arc
@@ -41,7 +41,7 @@ int has_cut_off_rev(int* hist_table, int range, int cut_off) {
 // range = the number of bins in positive and negative direction (now 100)
 // cut_off = outer bins are cut off if lower than cut_off (now 3)
 
-int histogram(chunk_record *arc_table, int *arc_len, mag_record *mag_table, int *mag_len, int arc_idx,
+int histogram(chunk_record *chunk_table, int *arc_len, mag_record *mag_table, int *mag_len, int arc_idx,
                                                                                           int bin, int range, int cut_off) {
 
     int left_arc_idx  = arc_idx;
@@ -69,7 +69,7 @@ int histogram(chunk_record *arc_table, int *arc_len, mag_record *mag_table, int 
 
     // travese all mag_records between left_arc_idx and right_arc_idx, constituting multiple arcs. f.ex. 3 arcs at a time
 
-    for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
+    for (int mag_idx = chunk_table[left_arc_idx].left_mag_idx; mag_idx <= chunk_table[right_arc_idx].right_mag_idx; mag_idx++) {
 
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
@@ -219,7 +219,7 @@ int histogram(chunk_record *arc_table, int *arc_len, mag_record *mag_table, int 
     //printf("y=<%f,%f>\n\n", myt_boundry_low, myt_boundry_high);
 
     // 1) loop throught mxt,myt and set the outliers in mag_table->outlier
-    for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
+    for (int mag_idx = chunk_table[left_arc_idx].left_mag_idx; mag_idx <= chunk_table[right_arc_idx].right_mag_idx; mag_idx++) {
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
@@ -233,21 +233,21 @@ int histogram(chunk_record *arc_table, int *arc_len, mag_record *mag_table, int 
             mag_table[mag_idx].disable = 0; // Set outlier false
         }
     }
-    // 2) Räkna fram seeds och sätt i arc_table
+    // 2) Räkna fram seeds och sätt i chunk_table
     float seed_x = (mxt_boundry_high + mxt_boundry_low) / 2;
     float seed_y = (myt_boundry_high + myt_boundry_low) / 2;
     float seed_scale_r = 1 / ( ( ((mxt_boundry_high - mxt_boundry_low) / 2) + ((myt_boundry_high - myt_boundry_low) / 2) ) / 2 );
 
-    // set the same seed for arcs in arc_table from left_arc_idx to right_arc_idx
+    // set the same seed for arcs in chunk_table from left_arc_idx to right_arc_idx
     for (int arc_idx = left_arc_idx; arc_idx <= right_arc_idx; arc_idx++) {
         //printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
 
-        arc_table[arc_idx].x0 = seed_x;
-        arc_table[arc_idx].y0 = seed_y;
-        arc_table[arc_idx].scale_r = seed_scale_r;
-        arc_table[arc_idx].scale_y_axis = 1;
-        arc_table[arc_idx].theta = 0;
-        arc_table[arc_idx].outlier = 0;
+        chunk_table[arc_idx].x0 = seed_x;
+        chunk_table[arc_idx].y0 = seed_y;
+        chunk_table[arc_idx].scale_r = seed_scale_r;
+        chunk_table[arc_idx].scale_y_axis = 1;
+        chunk_table[arc_idx].theta = 0;
+        chunk_table[arc_idx].outlier = 0;
     }
 
     free(hist_table_mxt_pos);

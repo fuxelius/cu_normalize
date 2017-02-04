@@ -61,7 +61,7 @@ void point_square(short mxt, short myt, float x0, float y0, float scale_r, float
 
 
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-__global__ void point_square_GPU(chunk_record *arc_table, int arc_len, mag_record *mag_table, int mag_len, int arc_size) {
+__global__ void point_square_GPU(chunk_record *chunk_table, int arc_len, mag_record *mag_table, int mag_len, int arc_size) {
 
     // int x_blockIdx  = 9; // simulating
     // int x_blockDim  = 32; // simulating
@@ -79,14 +79,14 @@ __global__ void point_square_GPU(chunk_record *arc_table, int arc_len, mag_recor
         float mxt = mag_table[mag_idx].mxt;
         float myt = mag_table[mag_idx].myt;
 
-        // // arc_table
-        // float x0            = arc_table[arc_idx].x0;
-        // float y0            = arc_table[arc_idx].y0;
-        // float scale_r       = arc_table[arc_idx].scale_r;
-        // float scale_y_axis  = arc_table[arc_idx].scale_y_axis;
-        // float theta         = arc_table[arc_idx].theta;
+        // // chunk_table
+        // float x0            = chunk_table[arc_idx].x0;
+        // float y0            = chunk_table[arc_idx].y0;
+        // float scale_r       = chunk_table[arc_idx].scale_r;
+        // float scale_y_axis  = chunk_table[arc_idx].scale_y_axis;
+        // float theta         = chunk_table[arc_idx].theta;
 
-        // arc_table; ga_uppsala2
+        // chunk_table; ga_uppsala2
         float x0            = 16;
         float y0            = -124;
         float scale_r       = 0.0041;
