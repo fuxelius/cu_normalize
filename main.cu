@@ -130,30 +130,30 @@ int main(int argc, char *argv[]) {
     #endif
     //--------------------------------------------------------------------------
 
-    int chunk_idx = 0;
-
-    // tested model
-    short mxt      =  200;
-    short myt      =  -30;
-    float x0       =   16;
-    float y0       =  -124;
-    float scale_r  = 0.0041;
-    float scale_y  = 1.045; // 1.045
-    float rotate   = 0.0;
-
-    float normalized_x;  // Return value
-    float normalized_y;  // Return value
-    float quad_error;    // Return value
-
-    for (int mag_idx = chunk_table[chunk_idx].left_mag_idx; mag_idx <= chunk_table[chunk_idx].right_mag_idx; mag_idx++) {
-        mxt = mag_table[mag_idx].mxt;
-        myt = mag_table[mag_idx].myt;
-
-        if (!mag_table[mag_idx].disable) {
-            point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate, &normalized_x, &normalized_y, &quad_error);
-            //printf("%f,%f\n", normalized_x, normalized_y);
-        }
-    }
+    // int chunk_idx = 0;
+    //
+    // // tested model
+    // short mxt      =  200;
+    // short myt      =  -30;
+    // float x0       =   16;
+    // float y0       =  -124;
+    // float scale_r  = 0.0041;
+    // float scale_y  = 1.045; // 1.045
+    // float rotate   = 0.0;
+    //
+    // float normalized_x;  // Return value
+    // float normalized_y;  // Return value
+    // float quad_error;    // Return value
+    //
+    // for (int mag_idx = chunk_table[chunk_idx].left_mag_idx; mag_idx <= chunk_table[chunk_idx].right_mag_idx; mag_idx++) {
+    //     mxt = mag_table[mag_idx].mxt;
+    //     myt = mag_table[mag_idx].myt;
+    //
+    //     if (!mag_table[mag_idx].disable) {
+    //         point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate, &normalized_x, &normalized_y, &quad_error);
+    //         //printf("%f,%f\n", normalized_x, normalized_y);
+    //     }
+    // }
 
     // ============================================ CUDA START ============================================
 
@@ -170,12 +170,9 @@ int main(int argc, char *argv[]) {
 
 
     // invoke kernel at host side
-    int dimx = BLOCK_SIZE; // < 1024
+    int dimx = BLOCK_SIZE; // < chunk_size
     dim3 block(dimx, 1);
     dim3 grid(mag_len / block.x + 1, 1);
-    //dim3 grid(800, 1);
-
-    //point_square_GPU(&chunk_table, chunk_len, &mag_table, mag_len, chunk_size);
 
     point_square_GPU<<<grid, block>>>(d_chunk_table, chunk_len, d_mag_table, mag_len, chunk_size);
 
