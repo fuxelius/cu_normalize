@@ -17,19 +17,19 @@
 
 
 
-// plot_raw_filtered print all raw data between left_arc_idx and right_arc_idx with outliers excluded.
+// plot_raw_filtered print all raw data between left_chunk_idx and right_chunk_idx with outliers excluded.
 // used for creating plots to R to debug and analysis. to run from BASH and inside main
 // Must first run:
 // 1) kinetics2record - the kinetics file to datastructure magtable
 // 2) gps2chunk_record  - Creates arcs pointing into mag_table
 // 3) histogram       - cut off outliers and mark it in mag_table[idx].outlier
-void plot_raw_filtered(chunk_record *chunk_table, int *arc_len, mag_record *mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
+void plot_raw_filtered(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, int *mag_len, int left_chunk_idx, int right_chunk_idx) {
     short mxt;
     short myt;
 
     puts("mxt, myt");
 
-    for (int mag_idx = chunk_table[left_arc_idx].left_mag_idx; mag_idx <= chunk_table[right_arc_idx].right_mag_idx; mag_idx++) {
+    for (int mag_idx = chunk_table[left_chunk_idx].left_mag_idx; mag_idx <= chunk_table[right_chunk_idx].right_mag_idx; mag_idx++) {
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
     //struct mag_record *mag_table = NULL; // mag_table is of length kinetics_len
     mag_record *mag_table = NULL;
 
-    int arc_len;
-    //struct  *chunk_table = NULL; // chunk_table is of length arc_len
+    int chunk_len;
+    //struct  *chunk_table = NULL; // chunk_table is of length chunk_len
     chunk_record *chunk_table = NULL;
 
 
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]) {
     // chunk_table[].left_mag_idx and chunk_table[].right_mag_idx points out each arcs border
     // These arcs partition the entire mag_table
     int arc_size = 1024;           // Should be a multiple of BLOCK_SIZE=256; CUDA stuff
-    slice2arc_record(&chunk_table, &arc_len, mag_table, mag_len, arc_size);
+    slice2arc_record(&chunk_table, &chunk_len, mag_table, mag_len, arc_size);
 
 
     #ifdef DEBUG_INFO_1
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
         puts("seqid | seqid | mag_idx | mag_idx | seqid | seqid");
 
         int left_idx, right_idx;
-        for (int rec_cnt=0; rec_cnt<arc_len; rec_cnt++) {
+        for (int rec_cnt=0; rec_cnt<chunk_len; rec_cnt++) {
             printf("++-> %u | %u | %u |",rec_cnt, chunk_table[rec_cnt].left_seq_id, chunk_table[rec_cnt].right_seq_id);
             printf(" %u | %u | ", chunk_table[rec_cnt].left_mag_idx, chunk_table[rec_cnt].right_mag_idx);
 
@@ -109,13 +109,13 @@ int main(int argc, char *argv[]) {
     int bin   = 5;
     int range = 100; // => (-500,+500)
     int cut_off = 5;
-    for (int arc_idx=0; arc_idx<arc_len; arc_idx++) {
-        histogram(chunk_table, &arc_len, mag_table, &mag_len, arc_idx, bin, range, cut_off);
+    for (int arc_idx=0; arc_idx<chunk_len; arc_idx++) {
+        histogram(chunk_table, &chunk_len, mag_table, &mag_len, arc_idx, bin, range, cut_off);
     }
 
     // print out the info in all arcs
     #ifdef DEBUG_INFO_1
-        for (int arc_idx=0; arc_idx<arc_len; arc_idx++) {
+        for (int arc_idx=0; arc_idx<chunk_len; arc_idx++) {
             printf("arc_idx %i\n", arc_idx);
             printf("left_mag_idx %i\n", chunk_table[arc_idx].left_mag_idx);
             printf("right_mag_idx %i\n", chunk_table[arc_idx].right_mag_idx);
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
     }
 
 
-      //point_square_GPU(&chunk_table, arc_len, &mag_table, mag_len, arc_size);
+      //point_square_GPU(&chunk_table, chunk_len, &mag_table, mag_len, arc_size);
 
 
     // malloc device global memory
@@ -165,7 +165,7 @@ int main(int argc, char *argv[]) {
     CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
 
     chunk_record *d_chunk_table;
-    size_t arc_bytes = arc_len * sizeof(chunk_record);
+    size_t arc_bytes = chunk_len * sizeof(chunk_record);
     CHECK(cudaMalloc((void **)&d_chunk_table, arc_bytes));
     CHECK(cudaMemcpy(d_chunk_table, chunk_table, arc_bytes, cudaMemcpyHostToDevice));
 
@@ -176,9 +176,9 @@ int main(int argc, char *argv[]) {
     dim3 grid(mag_len / block.x + 1, 1);
     //dim3 grid(800, 1);
 
-    //point_square_GPU(&chunk_table, arc_len, &mag_table, mag_len, arc_size);
+    //point_square_GPU(&chunk_table, chunk_len, &mag_table, mag_len, arc_size);
 
-    point_square_GPU<<<grid, block>>>(d_chunk_table, arc_len, d_mag_table, mag_len, arc_size);
+    point_square_GPU<<<grid, block>>>(d_chunk_table, chunk_len, d_mag_table, mag_len, arc_size);
 
     CHECK(cudaDeviceSynchronize());
 

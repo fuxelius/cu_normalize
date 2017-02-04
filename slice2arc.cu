@@ -10,21 +10,21 @@
 
 // slice2arc_record calculate the pointer index into mag_table and defines all arcs, returned in chunk_table
 // chunk_size is the number of elements in each arc fitted to WARP_SIZE for ultimate CUDA performance
-int slice2arc_record(chunk_record **chunk_table, int *arc_len, mag_record *mag_table, int mag_len, int arc_size) {
+int slice2arc_record(chunk_record **chunk_table, int *chunk_len, mag_record *mag_table, int mag_len, int chunk_size) {
 
-    //*arc_size = (wished_size/WARP_SIZE) * WARP_SIZE; // approximately the same size as chunk_size
-    *arc_len =  mag_len/arc_size + 1;  //
+    //*chunk_size = (wished_size/WARP_SIZE) * WARP_SIZE; // approximately the same size as chunk_size
+    *chunk_len =  mag_len/chunk_size + 1;  //
 
-    //printf("arc_size=%i, arc_len=%i, mag_len=%i\n\n", arc_size, *arc_len, mag_len);
+    //printf("chunk_size=%i, chunk_len=%i, mag_len=%i\n\n", chunk_size, *chunk_len, mag_len);
 
-    chunk_record *new_table = (chunk_record*) malloc((*arc_len) * sizeof(chunk_record));
+    chunk_record *new_table = (chunk_record*) malloc((*chunk_len) * sizeof(chunk_record));
 
     int left_mag_idx;
     int right_mag_idx;
 
-    for (int arc_idx=0; arc_idx < (*arc_len) - 1; arc_idx++) {
-        left_mag_idx = arc_idx * arc_size;
-        right_mag_idx = arc_idx * arc_size + arc_size - 1;
+    for (int arc_idx=0; arc_idx < (*chunk_len) - 1; arc_idx++) {
+        left_mag_idx = arc_idx * chunk_size;
+        right_mag_idx = arc_idx * chunk_size + chunk_size - 1;
 
         new_table[arc_idx].left_mag_idx  = left_mag_idx;
         new_table[arc_idx].right_mag_idx = right_mag_idx;
@@ -37,8 +37,8 @@ int slice2arc_record(chunk_record **chunk_table, int *arc_len, mag_record *mag_t
 
     // create last arc by hand here
     if (right_mag_idx < mag_len) {
-        int arc_idx = (*arc_len) - 1;
-        left_mag_idx = arc_idx * arc_size;
+        int arc_idx = (*chunk_len) - 1;
+        left_mag_idx = arc_idx * chunk_size;
         right_mag_idx = mag_len -1;
 
         new_table[arc_idx].left_mag_idx  = left_mag_idx;

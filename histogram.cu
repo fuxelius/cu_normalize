@@ -41,7 +41,7 @@ int has_cut_off_rev(int* hist_table, int range, int cut_off) {
 // range = the number of bins in positive and negative direction (now 100)
 // cut_off = outer bins are cut off if lower than cut_off (now 3)
 
-int histogram(chunk_record *chunk_table, int *arc_len, mag_record *mag_table, int *mag_len, int arc_idx,
+int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, int *mag_len, int arc_idx,
                                                                                           int bin, int range, int cut_off) {
 
     int left_arc_idx  = arc_idx;
