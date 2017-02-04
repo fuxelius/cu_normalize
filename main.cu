@@ -21,9 +21,9 @@
 // used for creating plots to R to debug and analysis. to run from BASH and inside main
 // Must first run:
 // 1) kinetics2record - the kinetics file to datastructure magtable
-// 2) gps2arc_record  - Creates arcs pointing into mag_table
+// 2) gps2chunk_record  - Creates arcs pointing into mag_table
 // 3) histogram       - cut off outliers and mark it in mag_table[idx].outlier
-void plot_raw_filtered(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
+void plot_raw_filtered(chunk_record *arc_table, int *arc_len, mag_record *mag_table, int *mag_len, int left_arc_idx, int right_arc_idx) {
     short mxt;
     short myt;
 
@@ -67,8 +67,8 @@ int main(int argc, char *argv[]) {
     mag_record *mag_table = NULL;
 
     int arc_len;
-    //struct arc_record *arc_table = NULL; // arc_table is of length arc_len
-    arc_record *arc_table = NULL;
+    //struct  *arc_table = NULL; // arc_table is of length arc_len
+    chunk_record *arc_table = NULL;
 
 
     // skriv ut en text här hur man refererar till programmet om man publicerar
@@ -164,8 +164,8 @@ int main(int argc, char *argv[]) {
     CHECK(cudaMalloc((void **)&d_mag_table, mag_bytes));
     CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
 
-    arc_record *d_arc_table;
-    size_t arc_bytes = arc_len * sizeof(arc_record);
+    chunk_record *d_arc_table;
+    size_t arc_bytes = arc_len * sizeof(chunk_record);
     CHECK(cudaMalloc((void **)&d_arc_table, arc_bytes));
     CHECK(cudaMemcpy(d_arc_table, arc_table, arc_bytes, cudaMemcpyHostToDevice));
 

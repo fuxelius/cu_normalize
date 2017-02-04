@@ -10,14 +10,14 @@
 
 // slice2arc_record calculate the pointer index into mag_table and defines all arcs, returned in arc_table
 // chunk_size is the number of elements in each arc fitted to WARP_SIZE for ultimate CUDA performance
-int slice2arc_record(arc_record **arc_table, int *arc_len, mag_record *mag_table, int mag_len, int arc_size) {
+int slice2arc_record(chunk_record **arc_table, int *arc_len, mag_record *mag_table, int mag_len, int arc_size) {
 
     //*arc_size = (wished_size/WARP_SIZE) * WARP_SIZE; // approximately the same size as chunk_size
     *arc_len =  mag_len/arc_size + 1;  //
 
     //printf("arc_size=%i, arc_len=%i, mag_len=%i\n\n", arc_size, *arc_len, mag_len);
 
-    arc_record *new_table = (arc_record*) malloc((*arc_len) * sizeof(arc_record));
+    chunk_record *new_table = (chunk_record*) malloc((*arc_len) * sizeof(chunk_record));
 
     int left_mag_idx;
     int right_mag_idx;

@@ -61,7 +61,7 @@ void point_square(short mxt, short myt, float x0, float y0, float scale_r, float
 
 
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-__global__ void point_square_GPU(arc_record *arc_table, int arc_len, mag_record *mag_table, int mag_len, int arc_size) {
+__global__ void point_square_GPU(chunk_record *arc_table, int arc_len, mag_record *mag_table, int mag_len, int arc_size) {
 
     // int x_blockIdx  = 9; // simulating
     // int x_blockDim  = 32; // simulating
