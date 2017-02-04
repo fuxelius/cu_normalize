@@ -15,7 +15,7 @@ int slice2arc_record(arc_record **arc_table, int *arc_len, mag_record *mag_table
     //*arc_size = (wished_size/WARP_SIZE) * WARP_SIZE; // approximately the same size as chunk_size
     *arc_len =  mag_len/arc_size + 1;  //
 
-    printf("arc_size=%i, arc_len=%i, mag_len=%i\n\n", arc_size, *arc_len, mag_len);
+    //printf("arc_size=%i, arc_len=%i, mag_len=%i\n\n", arc_size, *arc_len, mag_len);
 
     arc_record *new_table = (arc_record*) malloc((*arc_len) * sizeof(arc_record));
 
@@ -29,10 +29,10 @@ int slice2arc_record(arc_record **arc_table, int *arc_len, mag_record *mag_table
         new_table[arc_idx].left_mag_idx  = left_mag_idx;
         new_table[arc_idx].right_mag_idx = right_mag_idx;
 
-        new_table[arc_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
-        new_table[arc_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
+        //new_table[arc_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
+        //new_table[arc_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
 
-        printf("arc_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", arc_idx, left_mag_idx, right_mag_idx);
+        //printf("arc_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", arc_idx, left_mag_idx, right_mag_idx);
     }
 
     // create last arc by hand here
@@ -44,10 +44,10 @@ int slice2arc_record(arc_record **arc_table, int *arc_len, mag_record *mag_table
         new_table[arc_idx].left_mag_idx  = left_mag_idx;
         new_table[arc_idx].right_mag_idx = right_mag_idx;
 
-        new_table[arc_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
-        new_table[arc_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
+        //new_table[arc_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
+        //new_table[arc_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
 
-        printf("arc_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", arc_idx, left_mag_idx, right_mag_idx);
+        //printf("arc_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", arc_idx, left_mag_idx, right_mag_idx);
     }
 
     *arc_table = new_table;

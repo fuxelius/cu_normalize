@@ -50,7 +50,7 @@ int kinetics2record(char *db_name, mag_record **mag_table, int *kinetics_len) {
         //printf("%f | ",  (float)sqlite3_column_double(res, 1));  // dessa bör castas till CUDA single precision = float????
         //printf("%f\n", (float)sqlite3_column_double(res, 2)); // dessa bör castas till CUDA single precision
 
-        new_table[row_cnt].seq_id = sqlite3_column_int(res, 0);
+        //new_table[row_cnt].seq_id = sqlite3_column_int(res, 0);
         new_table[row_cnt].mxt = sqlite3_column_double(res, 1);
         new_table[row_cnt].myt = sqlite3_column_double(res, 2);
         new_table[row_cnt].disable = 0;

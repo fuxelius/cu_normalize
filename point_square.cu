@@ -16,7 +16,7 @@
 // scale_r in model; scale to unity circle with r=1
 // scale_y_axis in model; scale the rotated ellipse to a circle
 // theta in model (radians 0) <= theta <= pi/2
-void point_square(float mxt, float myt, float x0, float y0, float scale_r, float scale_y_axis, float theta,
+void point_square(short mxt, short myt, float x0, float y0, float scale_r, float scale_y_axis, float theta,
                                                   float *normalized_x, float *normalized_y, float *quad_error) {
 
     //printf("raw,%f,%f\n", x, y);
@@ -75,7 +75,6 @@ __global__ void point_square_GPU(arc_record *arc_table, int arc_len, mag_record 
     //printf("idx=%i arc_idx=%i\n", idx, arc_idx);
 
     if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
-
         // mag_table
         float mxt = mag_table[mag_idx].mxt;
         float myt = mag_table[mag_idx].myt;
@@ -128,15 +127,15 @@ __global__ void point_square_GPU(arc_record *arc_table, int arc_len, mag_record 
 
         //printf("normalized ,%f,%f\n", normalized_x, normalized_y);
 
-        //printf("cuda,%f,%f\n", scale_x, scale_y);
+        printf("cuda,%f,%f\n", scale_x, scale_y);
 
         float quad_error = powf(sqrtf(powf(normalized_x,2) + powf(normalized_y,2)) - 1,2); // Returns square error from unity cicle
 
         //printf("quad_error,%f\n", quad_error);
 
         // Write back result
-        mag_table[mag_idx].normalized_x = normalized_x;
-        mag_table[mag_idx].normalized_y = normalized_y;
-        mag_table[mag_idx].quad_error   = quad_error;
+        //mag_table[mag_idx].normalized_x = normalized_x; // <----------------- krashar, kanske inte får skriva tillbaka???
+        //mag_table[mag_idx].normalized_y = normalized_y;
+        //mag_table[mag_idx].quad_error   = quad_error;
      }
 }

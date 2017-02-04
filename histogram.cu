@@ -47,7 +47,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
     int left_arc_idx  = arc_idx;
     int right_arc_idx = arc_idx;
 
-    puts("\n>All arcs in mag_table");
+    //puts("\n>All arcs in mag_table");
 
     int *hist_table_mxt_pos = (int*) malloc(range * sizeof(int)); // positive values
     int *hist_table_mxt_neg = (int*) malloc(range * sizeof(int)); // negative values
@@ -59,10 +59,10 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
     memset(hist_table_myt_pos, 0, range * sizeof(int));  // initialize to zeros
     memset(hist_table_myt_neg, 0, range * sizeof(int));  // initialize to zeros
 
-    puts("\n>Next arc");
+    //puts("\n>Next arc");
 
-    short mxt; // 16-bit data
-    short myt; // 16-bit data
+    float mxt;
+    float myt;
 
     int mxt_idx; // mxt indexed to hist_tables
     int myt_idx; // mxt indexed to hist_tables
@@ -74,12 +74,12 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
         mxt = mag_table[mag_idx].mxt;
         myt = mag_table[mag_idx].myt;
 
-        printf("> %u\t%i\t%i", mag_idx, mxt, myt);
+        //printf("> %u\t%f\t%f", mag_idx, mxt, myt);
 
         // build up the histogram here
         if (mxt >= 0) {
             mxt_idx = (int)(mxt/bin);
-            printf("\tmxt_idx: +%u ", mxt_idx);
+            //printf("\tmxt_idx: +%u ", mxt_idx);
 
             if (mxt_idx < range) {
                 // addera till hist_table_mxt_pos
@@ -89,7 +89,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
         }
         else { // mxt < 0
             mxt_idx = (int)(-mxt/bin);
-            printf("\tmxt_idx: -%u", mxt_idx);
+            //printf("\tmxt_idx: -%u", mxt_idx);
 
             if (mxt_idx < range) {
                 // addera till hist_table_mxt_pos
@@ -100,7 +100,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
 
         if (myt >= 0) {
             myt_idx = (int)(myt/bin);
-            printf("\tmyt_idx: +%u\n", myt_idx);
+            //printf("\tmyt_idx: +%u\n", myt_idx);
 
             if (myt_idx < range) {
                 // addera till hist_table_mxt_pos
@@ -110,7 +110,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
         }
         else { // myt < 0
             myt_idx = (int)(-myt/bin);
-            printf("\tmyt_idx: -%u\n", myt_idx);
+            //printf("\tmyt_idx: -%u\n", myt_idx);
 
             if (myt_idx < range) {
                 // addera till hist_table_mxt_pos
@@ -132,43 +132,43 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
 
 
     #ifdef DEBUG_INFO_2
-        puts("\nmxt+");
+        //puts("\nmxt+");
         for (int i=0; i<range; i++) {
 
-            printf(" %u", hist_table_mxt_pos[i]);
+            //printf(" %u", hist_table_mxt_pos[i]);
 
         }
-        printf("\nforvard=%d (# %d) (value %d)", mxt_pos_idx, hist_table_mxt_pos[mxt_pos_idx], (bin) * mxt_pos_idx);
-        printf("\nreverse=%d (# %d) (value %d)\n\n", mxt_pos_idx_rev, hist_table_mxt_pos[mxt_pos_idx_rev], (bin) * mxt_pos_idx_rev);
+        //printf("\nforvard=%d (# %d) (value %d)", mxt_pos_idx, hist_table_mxt_pos[mxt_pos_idx], (bin) * mxt_pos_idx);
+        //printf("\nreverse=%d (# %d) (value %d)\n\n", mxt_pos_idx_rev, hist_table_mxt_pos[mxt_pos_idx_rev], (bin) * mxt_pos_idx_rev);
 
 
-        puts("mxt-");
+        //puts("mxt-");
         for (int i=0; i<range; i++) {
 
-            printf(" %u", hist_table_mxt_neg[i]);
+            //printf(" %u", hist_table_mxt_neg[i]);
 
         }
-        printf("\nposition=%d (# %d) (value %d)", mxt_neg_idx, hist_table_mxt_neg[mxt_neg_idx], (-bin) * mxt_neg_idx);
-        printf("\nreverse=%d (# %d) (value %d)\n\n", mxt_neg_idx_rev, hist_table_mxt_neg[mxt_neg_idx_rev], (bin) * mxt_neg_idx_rev);
+        //printf("\nposition=%d (# %d) (value %d)", mxt_neg_idx, hist_table_mxt_neg[mxt_neg_idx], (-bin) * mxt_neg_idx);
+        //printf("\nreverse=%d (# %d) (value %d)\n\n", mxt_neg_idx_rev, hist_table_mxt_neg[mxt_neg_idx_rev], (bin) * mxt_neg_idx_rev);
 
 
-        puts("myt+");
+        //puts("myt+");
         for (int i=0; i<range; i++) {
 
-            printf(" %u", hist_table_myt_pos[i]);
+            //printf(" %u", hist_table_myt_pos[i]);
 
         }
-        printf("\nposition=%d (# %d) (value %d)", myt_pos_idx, hist_table_myt_pos[myt_pos_idx], (bin) * myt_pos_idx);
-        printf("\nreverse=%d (# %d) (value %d)\n\n", myt_pos_idx_rev, hist_table_myt_pos[myt_pos_idx_rev], (bin) * myt_pos_idx_rev);
+        //printf("\nposition=%d (# %d) (value %d)", myt_pos_idx, hist_table_myt_pos[myt_pos_idx], (bin) * myt_pos_idx);
+        //printf("\nreverse=%d (# %d) (value %d)\n\n", myt_pos_idx_rev, hist_table_myt_pos[myt_pos_idx_rev], (bin) * myt_pos_idx_rev);
 
-        puts("myt-");
+        //puts("myt-");
         for (int i=0; i<range; i++) {
 
-            printf(" %u", hist_table_myt_neg[i]);
+            //printf(" %u", hist_table_myt_neg[i]);
 
         }
-        printf("\nposition=%d (# %d) (value %d)", myt_neg_idx, hist_table_myt_neg[myt_neg_idx], (-bin) * myt_neg_idx);
-        printf("\nreverse=%d (# %d) (value %d)\n\n", myt_neg_idx_rev, hist_table_myt_pos[myt_neg_idx_rev], (bin) * myt_neg_idx_rev);
+        //printf("\nposition=%d (# %d) (value %d)", myt_neg_idx, hist_table_myt_neg[myt_neg_idx], (-bin) * myt_neg_idx);
+        //printf("\nreverse=%d (# %d) (value %d)\n\n", myt_neg_idx_rev, hist_table_myt_pos[myt_neg_idx_rev], (bin) * myt_neg_idx_rev);
     #endif
 
 
@@ -196,7 +196,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
             //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
         }
 
-    printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
+    //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
 
     // if elements > cut_off exist on both sides of origo
     if (myt_pos_idx != -1 && myt_neg_idx != -1) {  // both sides of origo
@@ -216,7 +216,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
             //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
         }
 
-    printf("y=<%f,%f>\n\n", myt_boundry_low, myt_boundry_high);
+    //printf("y=<%f,%f>\n\n", myt_boundry_low, myt_boundry_high);
 
     // 1) loop throught mxt,myt and set the outliers in mag_table->outlier
     for (int mag_idx = arc_table[left_arc_idx].left_mag_idx; mag_idx <= arc_table[right_arc_idx].right_mag_idx; mag_idx++) {
@@ -240,7 +240,7 @@ int histogram(arc_record *arc_table, int *arc_len, mag_record *mag_table, int *m
 
     // set the same seed for arcs in arc_table from left_arc_idx to right_arc_idx
     for (int arc_idx = left_arc_idx; arc_idx <= right_arc_idx; arc_idx++) {
-        printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
+        //printf("arc_idx=%i seed_x=%f seed_y=%f seed_scale_r=%f\n\n", arc_idx, seed_x, seed_y, seed_scale_r);
 
         arc_table[arc_idx].x0 = seed_x;
         arc_table[arc_idx].y0 = seed_y;
