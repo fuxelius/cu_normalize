@@ -158,36 +158,32 @@ int main(int argc, char *argv[]) {
     // ============================================ CUDA START ============================================
 
     // malloc device global memory
-    mag_record *d_mag_table;
     size_t mag_bytes = mag_len * sizeof(mag_record);
-    CHECK(cudaMalloc((void **)&d_mag_table, mag_bytes));
-    CHECK(cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice));
+    CHECK(cudaMallocManaged((void **)&mag_table, mag_bytes)); // use check from nvidia later
 
-    chunk_record *d_chunk_table;
     size_t chunk_bytes = chunk_len * sizeof(chunk_record);
-    CHECK(cudaMalloc((void **)&d_chunk_table, chunk_bytes));
-    CHECK(cudaMemcpy(d_chunk_table, chunk_table, chunk_bytes, cudaMemcpyHostToDevice));
+    CHECK(cudaMallocManaged((void **)&chunk_table, chunk_bytes));
+
+    // // Only host side later, this is only for test
+    // size_t result_bytes = mag_len * sizeof(result_record); // same length as mag_table
+    // CHECK(cudaMallocManaged((void **)&result_table, result_bytes));
 
 
     // invoke kernel at host side
-    int dimx = BLOCK_SIZE; // < chunk_size
+    int dimx = BLOCK_SIZE; // Set in struct.h, should be smaller than chunk_size
     dim3 block(dimx, 1);
-    //dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
-    dim3 grid((mag_len )/ BLOCK_SIZE + 1, 1);
+    dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
 
-    point_square_GPU<<<grid, block>>>(d_chunk_table, chunk_len, d_mag_table, mag_len, chunk_size);
-    //point_square_GPU<<<4, 256>>>(d_chunk_table, chunk_len, d_mag_table, mag_len, chunk_size);
+    point_square_GPU<<<grid, block>>>(chunk_table, chunk_len, mag_table, mag_len, chunk_size);
 
     CHECK(cudaDeviceSynchronize());
 
     CHECK(cudaGetLastError());
 
-    CHECK(cudaMemcpy(mag_table, d_mag_table, mag_bytes, cudaMemcpyDeviceToHost));
-    CHECK(cudaMemcpy(chunk_table, d_chunk_table, chunk_bytes, cudaMemcpyDeviceToHost));
-
     // free device global memory
-    CHECK(cudaFree(d_mag_table));
-    CHECK(cudaFree(d_chunk_table));
+    CHECK(cudaFree(mag_table));     // denna hanterar free på både host och device
+    CHECK(cudaFree(chunk_table));   // denna hanterar free på både host och device
+    //CHECK(cudaFree(result_table));
 
     // reset device
     CHECK(cudaDeviceReset());
@@ -195,8 +191,9 @@ int main(int argc, char *argv[]) {
     // ============================================ CUDA END ============================================
 
 
-    free(mag_table);
-    free(chunk_table);
+    // for (int i=0; i<mag_len; i++) {
+    //   printf("cuda,%f,%f\n", result_table[i].mfv, result_table[i].rho);
+    // }
 
     return 0;
 

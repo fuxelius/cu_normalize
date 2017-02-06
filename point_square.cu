@@ -59,6 +59,9 @@ void point_square(short mxt, short myt, float x0, float y0, float scale_r, float
 
 }
 
+__device__ int first_test(int x, int y) {
+    return (x + y);
+}
 
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
 __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size) {
@@ -134,8 +137,13 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
         //printf("quad_error,%f\n", quad_error);
 
         // Write back result
-        //mag_table[mag_idx].normalized_x = normalized_x; // <----------------- krashar, kanske inte får skriva tillbaka???
+        //mag_table[mag_idx].normalized_x = normalized_x;
         //mag_table[mag_idx].normalized_y = normalized_y;
         //mag_table[mag_idx].quad_error   = quad_error;
+        //result_table[mag_idx].mfv = normalized_x;
+        //result_table[mag_idx].rho = normalized_y;
+
+        printf("first test x=%i, y=%i, x+y=%i\n", 3, 4, first_test(3,4));
+
      }
 }
