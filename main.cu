@@ -12,7 +12,7 @@
 #include "slice2chunk.h"
 #include "kinetics.h"
 
-#include "point_square.h"
+#include "cuda_magix.h"
 #include "device_info.h"
 
 
@@ -67,9 +67,9 @@ int main(int argc, char *argv[]) {
 
     // This table keeps the returned results on host
     // initialize to mfv and rho to zeros when filling in seq_id
-    result_record *result_table = NULL;   // identical length to mag_record(mag_len)   <-------------- bygg och returnera denna i kinetics2record
+    result_record *result_table = NULL;   // identical length to mag_record(mag_len);byggs och returneras i kinetics2record
 
-    int chunk_len;
+    int chunk_len;                        // number of chunks that divides entire mag table in CHUNK_SIZE
     chunk_record *chunk_table = NULL;
 
     // skriv ut en text här hur man refererar till programmet om man publicerar
@@ -84,8 +84,14 @@ int main(int argc, char *argv[]) {
     // Creates an chunk_table which is a partitioning of mxt, myt of a chunk_size
     // chunk_table[].left_mag_idx and chunk_table[].right_mag_idx points out each chunk border
     // These chunk partition the entire mag_table
-    int chunk_size = 1024;           // Should be a multiple of BLOCK_SIZE (now set to 256); CUDA stuff
-    slice2chunk_record(&chunk_table, &chunk_len, mag_table, mag_len, chunk_size);
+    // Should be a multiple of BLOCK_SIZE (now set to 256); CUDA stuff (= 20 minuter)
+    slice2chunk_record(&chunk_table, &chunk_len, mag_table, mag_len, CHUNK_SIZE);
+
+    //chunk_len/META_SIZE
+
+
+
+
 
 
     #ifdef DEBUG_INFO_1
@@ -174,7 +180,7 @@ int main(int argc, char *argv[]) {
     dim3 block(dimx, 1);
     dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
 
-    point_square_GPU<<<grid, block>>>(chunk_table, chunk_len, mag_table, mag_len, chunk_size);
+    point_square_GPU<<<grid, block>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE);
 
     CHECK(cudaDeviceSynchronize());
 

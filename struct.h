@@ -1,4 +1,6 @@
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 256      // IE CUDA block size
+#define CHUNK_SIZE 1024     // how many magvalues to minimize in each step
+#define META_SIZE 100       // how many chunks to handle each time on the devie (constant memory)
 
 // result_struct has the same length as mag_record = mag_table
 // They both have the same index, so indexing into result_struct[i].seq_id
@@ -37,3 +39,11 @@ typedef struct {            // Magnetometer data implement as an array of struct
     int iter_cnt;           // If lest square is not lower for iter_cnt cycles
     int finish;             // then set the thread for this chunk to finish
 } chunk_record;
+
+// Partitions how many chunks to run in paralell on device:
+// 100 is good (if chunk_record is 1024 => 102400 thraeds)
+// 102400 threads => error_matrix = 102400 * 33 bytes = 3.38 Mbytes
+typedef struct {
+    int left_chunk_idx;
+    int right_chunk_idx;
+} meta_record;
