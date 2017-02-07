@@ -1,0 +1,8 @@
+
+chunk_size=1024, chunk_len=2, mag_len=1934
+
+1>chunk_idx=0, left_mag_idx=0, right_mag_idx=1023
+2>chunk_idx=1, left_mag_idx=1024, right_mag_idx=1933
+
+chunk_len=2, META_SIZE=100, meta_len=1
+2>meta_idx=0, left_chunk_idx=0, right_chunk_idx=1

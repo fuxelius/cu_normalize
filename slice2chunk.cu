@@ -20,7 +20,7 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
         *chunk_len =  mag_len/chunk_size + 1;  //                       <------------------------------------------- 2017-02-07
     }
 
-    //printf("chunk_size=%i, chunk_len=%i, mag_len=%i\n\n", chunk_size, *chunk_len, mag_len);
+    printf("chunk_size=%i, chunk_len=%i, mag_len=%i\n\n", chunk_size, *chunk_len, mag_len);
 
     chunk_record *new_table = (chunk_record*) malloc((*chunk_len) * sizeof(chunk_record));
 
@@ -37,7 +37,7 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
         //new_table[chunk_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
         //new_table[chunk_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
 
-        //printf("chunk_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", chunk_idx, left_mag_idx, right_mag_idx);
+        printf("1>chunk_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", chunk_idx, left_mag_idx, right_mag_idx);
     }
 
     // create last chunk by hand here
@@ -52,7 +52,7 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
         //new_table[chunk_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
         //new_table[chunk_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
 
-        //printf("chunk_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", chunk_idx, left_mag_idx, right_mag_idx);
+        printf("2>chunk_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", chunk_idx, left_mag_idx, right_mag_idx);
     }
 
     *chunk_table = new_table;

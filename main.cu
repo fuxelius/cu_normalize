@@ -10,11 +10,11 @@
 
 #include "histogram.h"
 #include "slice2chunk.h"
+#include "slice2meta_record.h"
 #include "kinetics.h"
 
 #include "cuda_magix.h"
 #include "device_info.h"
-
 
 
 // plot_raw_filtered print all raw data between left_chunk_idx and right_chunk_idx with outliers excluded.
@@ -88,66 +88,10 @@ int main(int argc, char *argv[]) {
     slice2chunk_record(&chunk_table, &chunk_len, mag_table, mag_len, CHUNK_SIZE);
 
 
-
-
     int meta_len;
+    meta_record *meta_table = NULL;
 
-    if (chunk_len%META_SIZE == 0) {
-        meta_len = chunk_len / META_SIZE;
-    }
-    else {
-        meta_len = chunk_len / META_SIZE + 1;
-    }
-
-    printf("\nchunk_len=%i, META_SIZE=%i, meta_len=%i\n", chunk_len, META_SIZE, meta_len);
-
-    meta_record meta_table[meta_len];   // <------------------------------- loopa genom för att visa att det stämmer
-
-    int left_meta_idx;
-    int right_meta_idx;
-    //int meta_idx;
-
-    for (int meta_idx=0; meta_idx<meta_len - 1; meta_idx++) {
-      left_meta_idx = meta_idx * META_SIZE;
-      right_meta_idx = meta_idx * META_SIZE + META_SIZE - 1;
-
-        meta_table[meta_idx].left_chunk_idx = left_meta_idx;
-        meta_table[meta_idx].right_chunk_idx = right_meta_idx;
-        printf("1>meta_idx=%i, left_chunk_idx=%i, right_chunk_idx=%i\n", meta_idx, left_meta_idx, right_meta_idx);
-    }
-    if (right_meta_idx < chunk_len) {
-        int meta_idx = meta_len - 1;
-        left_meta_idx = meta_idx * META_SIZE;
-        right_meta_idx = chunk_len -1;
-
-        meta_table[meta_idx].left_chunk_idx  = left_meta_idx;
-        meta_table[meta_idx].right_chunk_idx = right_meta_idx;
-        printf("2>meta_idx=%i, left_chunk_idx=%i, right_chunk_idx=%i\n", meta_idx, left_meta_idx, right_meta_idx);
-    }
-
-
-
-    // for (int chunk_idx=0; chunk_idx < (*chunk_len) - 1; chunk_idx++) {
-    //     left_mag_idx = chunk_idx * chunk_size;
-    //     right_mag_idx = chunk_idx * chunk_size + chunk_size - 1;
-    //
-    //     new_table[chunk_idx].left_mag_idx  = left_mag_idx;
-    //     new_table[chunk_idx].right_mag_idx = right_mag_idx;
-    // }
-    // if (right_mag_idx < mag_len) {  <---------------------------------------------------????????????????????????????????????????
-    //     int chunk_idx = (*chunk_len) - 1;
-    //     left_mag_idx = chunk_idx * chunk_size;
-    //     right_mag_idx = mag_len -1;
-    //
-    //     new_table[chunk_idx].left_mag_idx  = left_mag_idx;
-    //     new_table[chunk_idx].right_mag_idx = right_mag_idx;
-    // }
-
-
-
-
-
-
+    slice2meta_record(&meta_table, &meta_len, chunk_len, META_SIZE);
 
 
     #ifdef DEBUG_INFO_1
