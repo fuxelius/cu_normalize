@@ -3,6 +3,8 @@
 #include "common/common.h"
 #include <stdio.h>
 #include <stdint.h>
+#include <curand.h>
+#include <curand_kernel.h>
 #include "math.h"
 #include "struct.h"
 #include "makros.h"
@@ -12,7 +14,25 @@
 // error_table[idx]
 __device__ float error_table[META_SIZE * CHUNK_SIZE]; // meta_chunk_size * chunk_size = 102400 threads (410 kbyte)
 
+// set the errors VERY high as initialization; first round will get them normal; no initialization step nessesary
+__device__ void initialize_error_table(void) {
+  for (int idx=0; idx<(META_SIZE * CHUNK_SIZE); idx++) {
+      error_table[idx] = 1000000;
+  }
+}
+// ----------------------------------------------------------------------------------------------------
+__device__ rand_record rand_table[META_SIZE];         // contains random values
 
+// set everything to 1 in the first round; no initialization step nessesary
+__device__ void initialize_rand_table(void) {
+  for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
+      rand_table[meta_idx].rand_1 = 1.00;  // 1 makes x0 unchanged in first round of point_square_GPU
+      rand_table[meta_idx].rand_2 = 1.00;  // 1 makes y0 unchanged in first round of point_square_GPU
+      rand_table[meta_idx].rand_3 = 1.00;  // 1 makes scale_r unchanged in first round of point_square_GPU
+      rand_table[meta_idx].rand_4 = 1.00;  // 1 makes scale_y_axis unchanged in first round of point_square_GPU
+      rand_table[meta_idx].rand_5 = 1.00;  // 1 makes theta unchanged in first round of point_square_GPU
+  }
+}
 // ========================================================== RANDOMIZE ====================================================================
 __device__ float randomize(void) { // Return a random number between 0-1, make a simple implementation hmm use CURAND
     return 1;
@@ -36,16 +56,25 @@ __device__ float sum_vector(int chunk_idx, int chunk_size) {
 
 
 // ======================================================== POINT SQUARE ==================================================================
-//CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
+// CUDA implementation, hold the number of (mxt, myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
 __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
                                      mag_record *mag_table, int mag_len,
-                                                            int chunk_size) {
+                                            int chunk_size, int meta_idx) {
+
+
+
+
+    // <------------------------------------------ uppdetera denna för meta_idx som blir offset för idx, chunk_idx !!!!!!!!!!!!
+    //
+
+
+
 
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int chunk_idx = idx / chunk_size; // whole number
-    int mag_idx = idx;
+    int chunk_idx = idx / chunk_size; // = meta_idx*META_SIZE  + idx / chunk_size
+    int mag_idx = idx;                // = meta_idx*chunk_size + idx
 
-    printf("Point Square idx=%i chunk_idx=%i\n", idx, chunk_idx);
+    printf("Point Square idx=%i, chunk_idx=%i, meta_idx=%i\n", idx, chunk_idx, meta_idx);
 
     if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
         // mag_table
@@ -53,18 +82,18 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
         short myt = mag_table[mag_idx].myt;
 
         // // chunk_table
-        // float x0            = chunk_table[chunk_idx].x0;
-        // float y0            = chunk_table[chunk_idx].y0;
-        // float scale_r       = chunk_table[chunk_idx].scale_r;
-        // float scale_y_axis  = chunk_table[chunk_idx].scale_y_axis;
-        // float theta         = chunk_table[chunk_idx].theta;
+        float x0            = chunk_table[chunk_idx].x0;            // multiply with rand_table[].rand_1
+        float y0            = chunk_table[chunk_idx].y0;            // multiply with rand_table[].rand_2
+        float scale_r       = chunk_table[chunk_idx].scale_r;       // multiply with rand_table[].rand_3
+        float scale_y_axis  = chunk_table[chunk_idx].scale_y_axis;  // multiply with rand_table[].rand_4
+        float theta         = chunk_table[chunk_idx].theta;         // multiply with rand_table[].rand_5
 
         // chunk_table; ga_uppsala2
-        float x0            = 16;
-        float y0            = -124;
-        float scale_r       = 0.0041;
-        float scale_y_axis  = 1.045;
-        float theta         = 0;
+        // float x0            = 16;
+        // float y0            = -124;
+        // float scale_r       = 0.0041;
+        // float scale_y_axis  = 1.045;
+        // float theta         = 0;
 
         //printf("raw,%f,%f\n", mxt, myt);
 
@@ -108,45 +137,59 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
 
         error_table[idx] = quad_error;
 
-        // Write back result
-        //mag_table[mag_idx].normalized_x = normalized_x;
-        //mag_table[mag_idx].normalized_y = normalized_y;
-        //mag_table[mag_idx].quad_error   = quad_error;
-        //result_table[mag_idx].mfv = normalized_x;
-        //result_table[mag_idx].rho = normalized_y;
-
         //printf("first test x=%i, y=%i, x+y=%i\n", 3, 4, first_test(3,4));
 
      }
 }
 
 
-// ======================================================== PARENT LAUNCH =================================================================
+// ======================================================== PARENT LAUNCH ==================================================================
 __global__ void parent_launch(chunk_record *chunk_table, int chunk_len,
                                   mag_record *mag_table, int mag_len,
                                   meta_record *meta_table, int meta_len,
                                                          int chunk_size) {
 
-    printf("Parent Launch: %i\n", threadIdx.x);
+    for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
+        initialize_error_table(); // all values set to 100000
+        initialize_rand_table();  // all values set to 1.00
 
-    int meta_idx = 0;
-    int left_chunk_idx = 0;
-    int right_chunk_idx = 0;
+        for (int round=0; round<1; round++) { // iterate 100.000 times
+            printf("Parent Launch: %i\n", threadIdx.x);
 
-    left_chunk_idx  = meta_table[meta_idx].left_chunk_idx;
-    right_chunk_idx = meta_table[meta_idx].right_chunk_idx;
+            // int meta_idx = 0;
+            // int left_chunk_idx = 0;
+            // int right_chunk_idx = 0;
+            //
+            // left_chunk_idx  = meta_table[meta_idx].left_chunk_idx;
+            // right_chunk_idx = meta_table[meta_idx].right_chunk_idx;
 
-    point_square_GPU<<<1, ((right_chunk_idx-left_chunk_idx+1) * chunk_size)>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE);
+            int dimx = BLOCK_SIZE; // Set in struct.h, should be smaller than chunk_size
+            dim3 block(dimx, 1);
+            dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+            point_square_GPU<<<grid,block>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
 
-    cudaDeviceSynchronize();
+            cudaDeviceSynchronize();
 
-    int chunk_idx = 0;
+            int chunk_idx = 0;
 
-    float sum = sum_vector(chunk_idx, CHUNK_SIZE);
+            float lsq = sum_vector(chunk_idx, CHUNK_SIZE);
 
-    cudaDeviceSynchronize();
+            cudaDeviceSynchronize();
 
-    printf("LSQ=%f for chunk_idx=%i\n", sum, chunk_idx);
+            // if lsq < chunk_table[idx].lsq
+            //    update x0,y0 ... with the randomized values
+            //    chunk_table[idx].iter++
+            // else
+            //    chunk_table[idx].iter++
+            //
+            // update random_table
+            //
+            // rerun everything :)
+
+            printf("LSQ=%f for chunk_idx=%i\n", lsq, chunk_idx);
+        }
+    }
+    
 }
 
 
@@ -157,5 +200,6 @@ void host_launch(chunk_record *chunk_table, int chunk_len,
                                                          int chunk_size) {
     printf("Host Launch:\n");
 
+    // Kernel running on only one single core
     parent_launch<<<1,1>>>(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, chunk_size);
 }

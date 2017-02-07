@@ -60,9 +60,9 @@ int kinetics2record(char *db_name, mag_record **mag_table, result_record **resul
         temp_mag[row_cnt].myt = sqlite3_column_double(res, 2);
         temp_mag[row_cnt].disable = 0;
 
-        printf("%u | ",temp_result[row_cnt].seq_id);
-        printf("%i | ",temp_mag[row_cnt].mxt);
-        printf("%i\n",temp_mag[row_cnt].myt);
+        //printf("%u | ",temp_result[row_cnt].seq_id);
+        //printf("%i | ",temp_mag[row_cnt].mxt);
+        //printf("%i\n",temp_mag[row_cnt].myt);
 
         row_cnt++;
     }

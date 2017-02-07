@@ -34,7 +34,7 @@ typedef struct {            // Magnetometer data implement as an array of struct
     float theta;            // = 0 första gången i iterationen
 
     // these should probably live in a matrix
-    float ls;               // least square for an iteration of the elements in chunk_table[chunk_idx]
+    float lsq;              // least square for an iteration of the elements in chunk_table[chunk_idx]
     int deepth;             // The total depth of iteration
     int iter_cnt;           // If lest square is not lower for iter_cnt cycles
     int finish;             // then set the thread for this chunk to finish
@@ -47,3 +47,12 @@ typedef struct {
     int left_chunk_idx;
     int right_chunk_idx;
 } meta_record;
+
+// Table to keep the random values from CURAND
+typedef struct {
+    float rand_1;
+    float rand_2;
+    float rand_3;
+    float rand_4;
+    float rand_5;
+} rand_record;

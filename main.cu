@@ -42,7 +42,8 @@ void plot_raw_filtered(chunk_record *chunk_table, int *chunk_len, mag_record *ma
 
 
 int main(int argc, char *argv[]) {
-
+   // skriv ut en text här hur man refererar till programmet om man publicerar
+   // vetenskapliga resultat. OSAN POSITIONING; H-H. Fuxelius
     fprintf(stderr,"\n\n                               *** OSAN POSITIONING 2017 v0.01 ***\n\n");
 
     print_device_info();    // Print out all relevant CUDA device information
@@ -61,9 +62,10 @@ int main(int argc, char *argv[]) {
     CHECK(cudaSetDevice(dev));
 
     char buffer_Z[100];  // string buffer
+    sprintf(buffer_Z,"%s",argv[1]);   // *.sqlite3
 
     int mag_len;
-    mag_record *mag_table = NULL;
+    mag_record *mag_table = NULL; // potentionally very big; only load in the end for transfering results back to host
 
     // This table keeps the returned results on host
     // initialize to mfv and rho to zeros when filling in seq_id
@@ -72,10 +74,8 @@ int main(int argc, char *argv[]) {
     int chunk_len;                        // number of chunks that divides entire mag table in CHUNK_SIZE
     chunk_record *chunk_table = NULL;
 
-    // skriv ut en text här hur man refererar till programmet om man publicerar
-    // vetenskapliga resultat. OSAN POSITIONING; H-H. Fuxelius
-
-    sprintf(buffer_Z,"%s",argv[1]);   // *.sqlite3
+    int meta_len;                         // number of meta_records that divides entire chunk_table in META_SIZE pieces
+    meta_record *meta_table = NULL;
 
     // Reads in magnetometer data from database (table kinetics) to magtable and returns
     // table length kinetics_len
@@ -87,12 +87,8 @@ int main(int argc, char *argv[]) {
     // Should be a multiple of BLOCK_SIZE (now set to 256); CUDA stuff (= 20 minuter)
     slice2chunk_record(&chunk_table, &chunk_len, mag_table, mag_len, CHUNK_SIZE);
 
-
-    int meta_len;
-    meta_record *meta_table = NULL;
-
+    // keep the legth of a chunk in a metatable
     slice2meta_record(&meta_table, &meta_len, chunk_len, META_SIZE);
-
 
     #ifdef DEBUG_INFO_1
         // Proves that the pointers are correct in chunk_table
@@ -173,15 +169,7 @@ int main(int argc, char *argv[]) {
     size_t meta_bytes = meta_len * sizeof(meta_record);
     CHECK(cudaMallocManaged((void **)&meta_table, meta_bytes));
 
-
-    // // invoke kernel at host side
-    // int dimx = BLOCK_SIZE; // Set in struct.h, should be smaller than chunk_size
-    // dim3 block(dimx, 1);
-    // dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
-    //
-    // point_square_GPU<<<grid, block>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE);
-
-    host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, CHUNK_SIZE);
+    host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, CHUNK_SIZE); // <--------- MAIN CUDA CALL
 
     CHECK(cudaDeviceSynchronize());
 
@@ -190,7 +178,7 @@ int main(int argc, char *argv[]) {
     // free device global memory
     CHECK(cudaFree(mag_table));     // denna hanterar free på både host och device
     CHECK(cudaFree(chunk_table));   // denna hanterar free på både host och device
-    CHECK(cudaFree(meta_table));   // denna hanterar free på både host och device
+    CHECK(cudaFree(meta_table));    // denna hanterar free på både host och device
 
     // reset device
     CHECK(cudaDeviceReset());
