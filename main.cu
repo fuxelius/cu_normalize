@@ -170,17 +170,18 @@ int main(int argc, char *argv[]) {
     size_t chunk_bytes = chunk_len * sizeof(chunk_record);
     CHECK(cudaMallocManaged((void **)&chunk_table, chunk_bytes));
 
-    // // Only host side later, this is only for test
-    // size_t result_bytes = mag_len * sizeof(result_record); // same length as mag_table
-    // CHECK(cudaMallocManaged((void **)&result_table, result_bytes));
+    size_t meta_bytes = meta_len * sizeof(meta_record);
+    CHECK(cudaMallocManaged((void **)&meta_table, meta_bytes));
 
 
-    // invoke kernel at host side
-    int dimx = BLOCK_SIZE; // Set in struct.h, should be smaller than chunk_size
-    dim3 block(dimx, 1);
-    dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+    // // invoke kernel at host side
+    // int dimx = BLOCK_SIZE; // Set in struct.h, should be smaller than chunk_size
+    // dim3 block(dimx, 1);
+    // dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+    //
+    // point_square_GPU<<<grid, block>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE);
 
-    point_square_GPU<<<grid, block>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE);
+    host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, CHUNK_SIZE);
 
     CHECK(cudaDeviceSynchronize());
 
@@ -189,7 +190,7 @@ int main(int argc, char *argv[]) {
     // free device global memory
     CHECK(cudaFree(mag_table));     // denna hanterar free på både host och device
     CHECK(cudaFree(chunk_table));   // denna hanterar free på både host och device
-    //CHECK(cudaFree(result_table));
+    CHECK(cudaFree(meta_table));   // denna hanterar free på både host och device
 
     // reset device
     CHECK(cudaDeviceReset());

@@ -1,6 +1,6 @@
 #define BLOCK_SIZE 256      // IE CUDA block size
 #define CHUNK_SIZE 1024     // how many magvalues to minimize in each step
-#define META_SIZE 100       // how many chunks to handle each time on the devie (constant memory)
+#define META_SIZE 10        // default=100 how many chunks to handle each time on the devie (constant memory)
 
 // result_struct has the same length as mag_record = mag_table
 // They both have the same index, so indexing into result_struct[i].seq_id
@@ -11,7 +11,7 @@ typedef struct {       // Host only, takes to much space for device (20*10^6 ent
     float rho;
 } result_record;
 
-// Magnetometer data implement as an array of structs
+// Magnetometer data implemented as an array of structs
 // 33 bytes/record => 20*10^6 entries (2 years) => 660 Mbyte of datastructure
 typedef struct {       // Host and device
     short mxt;         // 16-bit

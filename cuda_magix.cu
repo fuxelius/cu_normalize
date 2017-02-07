@@ -7,38 +7,45 @@
 #include "struct.h"
 #include "makros.h"
 
-
+// ====================================================== DATA STRUCTURES ==================================================================
+// error_table[chunk_idx*CHUNK_SIZE + threadIdx.x] ??
+// error_table[idx]
 __device__ float error_table[META_SIZE * CHUNK_SIZE]; // meta_chunk_size * chunk_size = 102400 threads (410 kbyte)
 
 
+// ========================================================== RANDOMIZE ====================================================================
 __device__ float randomize(void) { // Return a random number between 0-1, make a simple implementation hmm use CURAND
     return 1;
 }
 
 
-// this is probably very efficient ... if running on 100 processors in paralell
-__device__ float sum_vector(float* vector, int vec_length) {
+// ======================================================== SUM A VECTOR ===================================================================
+// this is probably very efficient ... if running on 100 processors in paralell ... and only 1024 loops ;)
+__device__ float sum_vector(int chunk_idx, int chunk_size) {
+    int off_set = chunk_idx*chunk_size;
     float sum = 0;
-    for (int i=0; i<vec_length; i++) {
-        sum += vector[i];
+
+    for (int idx=off_set; idx < off_set+chunk_size; idx++) {
+        sum = sum + error_table[idx];
     }
+
+    printf("Sum vector: chunk_idx %i (%f)\n", chunk_idx, sum);
+
     return sqrtf(sum);
 }
 
 
+// ======================================================== POINT SQUARE ==================================================================
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-__global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size) {
-
-    // int x_blockIdx  = 9; // simulating
-    // int x_blockDim  = 32; // simulating
-    // int x_threadIdx = 27; // simulating
-    // int idx = x_blockIdx * x_blockDim + x_threadIdx; // simulating idx = 315
+__global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
+                                     mag_record *mag_table, int mag_len,
+                                                            int chunk_size) {
 
     int idx = threadIdx.x + blockIdx.x * blockDim.x;
     int chunk_idx = idx / chunk_size; // whole number
     int mag_idx = idx;
 
-    //printf("idx=%i chunk_idx=%i\n", idx, chunk_idx);
+    printf("Point Square idx=%i chunk_idx=%i\n", idx, chunk_idx);
 
     if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
         // mag_table
@@ -99,6 +106,8 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
 
         //printf("quad_error,%f\n", quad_error);
 
+        error_table[idx] = quad_error;
+
         // Write back result
         //mag_table[mag_idx].normalized_x = normalized_x;
         //mag_table[mag_idx].normalized_y = normalized_y;
@@ -109,4 +118,44 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_r
         //printf("first test x=%i, y=%i, x+y=%i\n", 3, 4, first_test(3,4));
 
      }
+}
+
+
+// ======================================================== PARENT LAUNCH =================================================================
+__global__ void parent_launch(chunk_record *chunk_table, int chunk_len,
+                                  mag_record *mag_table, int mag_len,
+                                  meta_record *meta_table, int meta_len,
+                                                         int chunk_size) {
+
+    printf("Parent Launch: %i\n", threadIdx.x);
+
+    int meta_idx = 0;
+    int left_chunk_idx = 0;
+    int right_chunk_idx = 0;
+
+    left_chunk_idx  = meta_table[meta_idx].left_chunk_idx;
+    right_chunk_idx = meta_table[meta_idx].right_chunk_idx;
+
+    point_square_GPU<<<1, ((right_chunk_idx-left_chunk_idx+1) * chunk_size)>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE);
+
+    cudaDeviceSynchronize();
+
+    int chunk_idx = 0;
+
+    float sum = sum_vector(chunk_idx, CHUNK_SIZE);
+
+    cudaDeviceSynchronize();
+
+    printf("LSQ=%f for chunk_idx=%i\n", sum, chunk_idx);
+}
+
+
+// ========================================================= HOST LAUNCH ==================================================================
+void host_launch(chunk_record *chunk_table, int chunk_len,
+                                  mag_record *mag_table, int mag_len,
+                                  meta_record *meta_table, int meta_len,
+                                                         int chunk_size) {
+    printf("Host Launch:\n");
+
+    parent_launch<<<1,1>>>(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, chunk_size);
 }
