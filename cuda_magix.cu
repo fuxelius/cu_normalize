@@ -11,7 +11,7 @@
 __device__ float error_table[META_SIZE * CHUNK_SIZE]; // meta_chunk_size * chunk_size = 102400 threads (410 kbyte)
 
 
-__device__ float randomize(void) { // Return a random number between 0-1
+__device__ float randomize(void) { // Return a random number between 0-1, make a simple implementation hmm use CURAND
     return 1;
 }
 
@@ -22,8 +22,9 @@ __device__ float sum_vector(float* vector, int vec_length) {
     for (int i=0; i<vec_length; i++) {
         sum += vector[i];
     }
-    return sum;
+    return sqrtf(sum);
 }
+
 
 //CUDA implementation, hold the number of (mxt,myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
 __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size) {

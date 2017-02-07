@@ -13,7 +13,12 @@
 int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *mag_table, int mag_len, int chunk_size) {
 
     //*chunk_size = (wished_size/WARP_SIZE) * WARP_SIZE; // approximately the same size as chunk_size
-    *chunk_len =  mag_len/chunk_size + 1;  //
+    if (mag_len%chunk_size == 0) {
+        *chunk_len =  mag_len/chunk_size;      // evens out
+    }
+    else {
+        *chunk_len =  mag_len/chunk_size + 1;  //                       <------------------------------------------- 2017-02-07
+    }
 
     //printf("chunk_size=%i, chunk_len=%i, mag_len=%i\n\n", chunk_size, *chunk_len, mag_len);
 
