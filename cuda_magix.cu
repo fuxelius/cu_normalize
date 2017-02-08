@@ -83,7 +83,7 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
 
     //printf("Point Square mag_idx=%i, chunk_idx=%i, meta_idx=%i\n", mag_idx, chunk_idx, meta_idx);
 
-    if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
+    if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {  // <---------------------------------------------- segmentation fault skapas nog här
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -153,13 +153,16 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
 // ======================================================== PARENT LAUNCH ==================================================================
 // this is main() for CUDA
 __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, meta_record *meta_table, int meta_len) {
+
     printf("Device Launch\n");
+
+    int max_iter = 1; // Maximum iteration depth 100,000
 
     for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
         initialize_error_table(META_SIZE, CHUNK_SIZE); // all values set to 100000
         initialize_rand_table(META_SIZE);  // all values set to 1.00
 
-        for (int round=0; round<1; round++) { // iterate 100.000 times
+        for (int round=0; round<max_iter; round++) { // iterate 100.000 times
             printf("meta_idx=%i, round=%i\n", meta_idx, round);
 
             // int meta_idx = 0;
@@ -197,7 +200,7 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
     }
 
 
-    free(error_table);
+    free(error_table);  // <-------------------------------------------------------- segmentation fault
     free(rand_table);
 }
 
