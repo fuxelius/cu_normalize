@@ -169,7 +169,7 @@ int main(int argc, char *argv[]) {
     size_t meta_bytes = meta_len * sizeof(meta_record);
     CHECK(cudaMallocManaged((void **)&meta_table, meta_bytes));
 
-    host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, CHUNK_SIZE); // <--------- MAIN CUDA CALL
+    host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
 
     CHECK(cudaDeviceSynchronize());
 

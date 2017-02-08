@@ -10,28 +10,31 @@
 #include "makros.h"
 
 // ====================================================== DATA STRUCTURES ==================================================================
-// error_table[chunk_idx*CHUNK_SIZE + threadIdx.x] ??
-// error_table[idx]
-__device__ float error_table[META_SIZE * CHUNK_SIZE]; // meta_chunk_size * chunk_size = 102400 threads (410 kbyte)
+// error_table[mag_idx] ??
+__device__ float *error_table; //[META_SIZE * CHUNK_SIZE]; meta_size * chunk_size= 100*1024=102400 threads (410 kbyte)
 
 // set the errors VERY high as initialization; first round will get them normal; no initialization step nessesary
-__device__ void initialize_error_table(void) {
-  for (int idx=0; idx<(META_SIZE * CHUNK_SIZE); idx++) {
-      error_table[idx] = 1000000;
-  }
+__device__ void initialize_error_table(int meta_size, int chunk_size) {
+    error_table =(float*) malloc(meta_size*chunk_size * sizeof(float));
+
+    for (int idx=0; idx<(meta_size * chunk_size); idx++) {
+        error_table[idx] = 1000000;
+    }
 }
 // ----------------------------------------------------------------------------------------------------
-__device__ rand_record rand_table[META_SIZE];         // contains random values
+__device__ rand_record *rand_table; //[META_SIZE]; contains random values
 
 // set everything to 1 in the first round; no initialization step nessesary
-__device__ void initialize_rand_table(void) {
-  for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
-      rand_table[meta_idx].rand_1 = 1.00;  // 1 makes x0 unchanged in first round of point_square_GPU
-      rand_table[meta_idx].rand_2 = 1.00;  // 1 makes y0 unchanged in first round of point_square_GPU
-      rand_table[meta_idx].rand_3 = 1.00;  // 1 makes scale_r unchanged in first round of point_square_GPU
-      rand_table[meta_idx].rand_4 = 1.00;  // 1 makes scale_y_axis unchanged in first round of point_square_GPU
-      rand_table[meta_idx].rand_5 = 1.00;  // 1 makes theta unchanged in first round of point_square_GPU
-  }
+__device__ void initialize_rand_table(int meta_size) {
+    rand_table =(rand_record*) malloc(meta_size * sizeof(rand_record));
+
+    for (int meta_idx=0; meta_idx<meta_size; meta_idx++) {
+        rand_table[meta_idx].rand_1 = 1.00;  // 1 makes x0 unchanged in first round of point_square_GPU
+        rand_table[meta_idx].rand_2 = 1.00;  // 1 makes y0 unchanged in first round of point_square_GPU
+        rand_table[meta_idx].rand_3 = 1.00;  // 1 makes scale_r unchanged in first round of point_square_GPU
+        rand_table[meta_idx].rand_4 = 1.00;  // 1 makes scale_y_axis unchanged in first round of point_square_GPU
+        rand_table[meta_idx].rand_5 = 1.00;  // 1 makes theta unchanged in first round of point_square_GPU
+    }
 }
 // ========================================================== RANDOMIZE ====================================================================
 __device__ float randomize(void) { // Return a random number between 0-1, make a simple implementation hmm use CURAND
@@ -70,11 +73,15 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
 
 
 
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int chunk_idx = idx / chunk_size; // = meta_idx*META_SIZE  + idx / chunk_size
-    int mag_idx = idx;                // = meta_idx*chunk_size + idx
+    // int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    // int chunk_idx = idx / chunk_size; // = meta_idx*META_SIZE  + idx / chunk_size
+    // int mag_idx = idx;                // = meta_idx*chunk_size + idx
 
-    printf("Point Square idx=%i, chunk_idx=%i, meta_idx=%i\n", idx, chunk_idx, meta_idx);
+    int idx = threadIdx.x + blockIdx.x * blockDim.x;
+    int chunk_idx = meta_idx*META_SIZE  + idx / chunk_size;
+    int mag_idx = meta_idx*chunk_size + idx;
+
+    //printf("Point Square mag_idx=%i, chunk_idx=%i, meta_idx=%i\n", mag_idx, chunk_idx, meta_idx);
 
     if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {
         // mag_table
@@ -144,17 +151,16 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
 
 
 // ======================================================== PARENT LAUNCH ==================================================================
-__global__ void parent_launch(chunk_record *chunk_table, int chunk_len,
-                                  mag_record *mag_table, int mag_len,
-                                  meta_record *meta_table, int meta_len,
-                                                         int chunk_size) {
+// this is main() for CUDA
+__global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, meta_record *meta_table, int meta_len) {
+    printf("Device Launch\n");
 
     for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
-        initialize_error_table(); // all values set to 100000
-        initialize_rand_table();  // all values set to 1.00
+        initialize_error_table(META_SIZE, CHUNK_SIZE); // all values set to 100000
+        initialize_rand_table(META_SIZE);  // all values set to 1.00
 
         for (int round=0; round<1; round++) { // iterate 100.000 times
-            printf("Parent Launch: %i\n", threadIdx.x);
+            printf("meta_idx=%i, round=%i\n", meta_idx, round);
 
             // int meta_idx = 0;
             // int left_chunk_idx = 0;
@@ -189,17 +195,17 @@ __global__ void parent_launch(chunk_record *chunk_table, int chunk_len,
             printf("LSQ=%f for chunk_idx=%i\n", lsq, chunk_idx);
         }
     }
-    
+
+
+    free(error_table);
+    free(rand_table);
 }
 
 
 // ========================================================= HOST LAUNCH ==================================================================
-void host_launch(chunk_record *chunk_table, int chunk_len,
-                                  mag_record *mag_table, int mag_len,
-                                  meta_record *meta_table, int meta_len,
-                                                         int chunk_size) {
+void host_launch(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, meta_record *meta_table, int meta_len) {
     printf("Host Launch:\n");
 
-    // Kernel running on only one single core
-    parent_launch<<<1,1>>>(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len, chunk_size);
+    cuda_main<<<1,1>>>(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len); // Kernel running on only one single core
+
 }
