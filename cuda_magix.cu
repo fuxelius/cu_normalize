@@ -22,25 +22,44 @@ __device__ void initialize_error_table(int meta_size, int chunk_size) {
     }
 }
 // ----------------------------------------------------------------------------------------------------
-__device__ rand_record *rand_table; //[META_SIZE]; contains random values
+// Use the same random numbers for all sets we are working with
+__device__ float rand_table[5]; //[META_SIZE]; contains 5 random values
 
-// set everything to 1 in the first round; no initialization step nessesary
-__device__ void initialize_rand_table(int meta_size) {
-    rand_table =(rand_record*) malloc(meta_size * sizeof(rand_record));
+// first round x0, y0, ... is untouched
+__device__ void initialize_rand_table(void) {
+    rand_table[0] = 1;
+    rand_table[1] = 1;
+    rand_table[2] = 1;
+    rand_table[3] = 1;
+    rand_table[4] = 1;
+}
+// ================================================ RANDOM NUMBER GENERATOR (RNG) ==========================================================
 
-    for (int meta_idx=0; meta_idx<meta_size; meta_idx++) {
-        rand_table[meta_idx].rand_1 = 1.00;  // 1 makes x0 unchanged in first round of point_square_GPU
-        rand_table[meta_idx].rand_2 = 1.00;  // 1 makes y0 unchanged in first round of point_square_GPU
-        rand_table[meta_idx].rand_3 = 1.00;  // 1 makes scale_r unchanged in first round of point_square_GPU
-        rand_table[meta_idx].rand_4 = 1.00;  // 1 makes scale_y_axis unchanged in first round of point_square_GPU
-        rand_table[meta_idx].rand_5 = 1.00;  // 1 makes theta unchanged in first round of point_square_GPU
+__global__ void setup_kernel(curandState * state, unsigned long seed) {
+    int id = threadIdx.x;
+    curand_init(seed, id, 0, &state[id]);
+}
+
+// Normal (Gaussian) distribution around 0.0f with stdandard deviation of 1.0f
+__global__ void generate_rand(curandState* globalState) {
+    int idx = threadIdx.x;
+    curandState localState = globalState[idx];
+    //float RANDOM = curand_uniform( &localState );
+    float RANDOM = curand_normal(&localState);
+    globalState[idx] = localState;
+
+    float randy = RANDOM/10 + 1;
+
+    if (randy > 0.7 && randy < 1.3) {
+        //printf("1>random=%f\n", randy);
+        rand_table[idx] = randy;
     }
+    else {
+        //printf("2>random=%f (%f)\n", 1.0, randy);
+        rand_table[idx] = 1.00;
+    }
+    globalState[idx] = localState;
 }
-// ========================================================== RANDOMIZE ====================================================================
-__device__ float randomize(void) { // Return a random number between 0-1, make a simple implementation hmm use CURAND
-    return 1;
-}
-
 
 // ======================================================== SUM A VECTOR ===================================================================
 // this is probably very efficient ... if running on 100 processors in paralell ... and only 1024 loops ;)
@@ -60,17 +79,7 @@ __device__ float sum_vector(int chunk_idx, int chunk_size) {
 
 // ======================================================== POINT SQUARE ==================================================================
 // CUDA implementation, hold the number of (mxt, myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-__global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
-                                     mag_record *mag_table, int mag_len,
-                                            int chunk_size, int meta_idx) {
-
-
-
-
-    // <------------------------------------------ uppdetera denna för meta_idx som blir offset för idx, chunk_idx !!!!!!!!!!!!
-    //
-
-
+__global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size, int meta_idx) {
 
 
     // int idx = threadIdx.x + blockIdx.x * blockDim.x;
@@ -89,18 +98,11 @@ __global__ void point_square_GPU(chunk_record *chunk_table, int chunk_len,
         short myt = mag_table[mag_idx].myt;
 
         // // chunk_table
-        float x0            = chunk_table[chunk_idx].x0;            // multiply with rand_table[].rand_1
-        float y0            = chunk_table[chunk_idx].y0;            // multiply with rand_table[].rand_2
-        float scale_r       = chunk_table[chunk_idx].scale_r;       // multiply with rand_table[].rand_3
-        float scale_y_axis  = chunk_table[chunk_idx].scale_y_axis;  // multiply with rand_table[].rand_4
-        float theta         = chunk_table[chunk_idx].theta;         // multiply with rand_table[].rand_5
-
-        // chunk_table; ga_uppsala2
-        // float x0            = 16;
-        // float y0            = -124;
-        // float scale_r       = 0.0041;
-        // float scale_y_axis  = 1.045;
-        // float theta         = 0;
+        float x0            = chunk_table[chunk_idx].x0           * rand_table[0];
+        float y0            = chunk_table[chunk_idx].y0           * rand_table[1];
+        float scale_r       = chunk_table[chunk_idx].scale_r      * rand_table[2];
+        float scale_y_axis  = chunk_table[chunk_idx].scale_y_axis * rand_table[3];
+        float theta         = chunk_table[chunk_idx].theta        * rand_table[4];
 
         //printf("raw,%f,%f\n", mxt, myt);
 
@@ -156,11 +158,19 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
     printf("Device Launch\n");
 
+    // ----------------------------- RANDOMIZE SETUP  -------------------------------------------
+    int N = 5; // generate 5 random numbers
+    curandState* devStates = (curandState*) malloc( N*sizeof(curandState));
+
+    // setup seeds
+    setup_kernel<<<1,N>>>(devStates, clock64());
+    //-------------------------------------------------------------------------------------------
+
     int max_iter = 1; // Maximum iteration depth 100,000
 
     for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
         initialize_error_table(META_SIZE, CHUNK_SIZE); // all values set to 100000
-        initialize_rand_table(META_SIZE);  // all values set to 1.00
+        initialize_rand_table();              // all values set to 1.00
 
         for (int round=0; round<max_iter; round++) { // iterate 100.000 times
             printf("meta_idx=%i, round=%i\n", meta_idx, round);
@@ -195,13 +205,23 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
             //
             // rerun everything :)
 
+            // generate random numbers
+            generate_rand<<<1,N>>>(devStates);
+
+            cudaDeviceSynchronize();
+
+            printf("random=%f\n", rand_table[0]);
+            printf("random=%f\n", rand_table[1]);
+            printf("random=%f\n", rand_table[2]);
+            printf("random=%f\n", rand_table[3]);
+            printf("random=%f\n", rand_table[4]);
+
             printf("LSQ=%f for chunk_idx=%i\n", lsq, chunk_idx);
         }
     }
 
 
-    free(error_table);  // <-------------------------------------------------------- segmentation fault
-    free(rand_table);
+    free(error_table);
 }
 
 
