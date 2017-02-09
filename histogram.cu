@@ -248,6 +248,10 @@ int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, 
         chunk_table[chunk_idx].scale_y_axis = 1;
         chunk_table[chunk_idx].theta = 0;
         chunk_table[chunk_idx].outlier = 0;
+
+        chunk_table[chunk_idx].lsq = 10000;    // Initialize to humongos big :)
+        chunk_table[chunk_idx].iter_cnt = 0;   // iteration count
+        chunk_table[chunk_idx].finish = 0;
     }
 
     free(hist_table_mxt_pos);
