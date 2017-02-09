@@ -10,17 +10,12 @@
 #include "makros.h"
 
 // ====================================================== DATA STRUCTURES ==================================================================
-// error_table[mag_idx] ??
-__device__ float *error_table; //[META_SIZE * CHUNK_SIZE]; meta_size * chunk_size= 100*1024=102400 threads (410 kbyte)
+// error_table[mag_idx]
+__device__ float *error_table; // [META_SIZE * CHUNK_SIZE] meta_size * chunk_size= 100*1024=102400 threads (410 kbyte)
 
-// // set the errors VERY high as initialization; first round will get them normal; no initialization step nessesary
-// __device__ void initialize_error_table(int meta_size, int chunk_size) {
-//     error_table =(float*) malloc(meta_size*chunk_size * sizeof(float));
-//
-//     for (int idx=0; idx<(meta_size * chunk_size); idx++) {
-//         error_table[idx] = 1000000;
-//     }
-// }
+__device__ void initialize_error_table(int meta_size, int chunk_size) {
+    error_table =(float*) malloc(meta_size*chunk_size * sizeof(float));
+}
 
 // ----------------------------------------------------------------------------------------------------
 
@@ -85,14 +80,17 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
 
     if (idx <= META_SIZE) {
         float sum = 0;
-        // for (int error_idx=off_set; error_idx < off_set+chunk_size; error_idx++) {
-        //     sum = sum + error_table[error_idx];
-        // }
+        for (int error_idx=off_set; error_idx < (off_set+chunk_size); error_idx++) {  // ??????????????????
+            sum = sum + error_table[error_idx];
+        }
 
         float lsq = sqrtf(sum);
 
         // if approximation is better update chunk_table[chunk_idx]
         if (lsq < chunk_table[chunk_idx].lsq) {
+
+            printf("Updated meta_idx=%i chunk_idx=%i old_lsq=%f new_lsq=%f\n", meta_idx, chunk_idx, chunk_table[chunk_idx].lsq, lsq);
+
             chunk_table[chunk_idx].x0           = chunk_table[chunk_idx].x0 * rand_table[0];
             chunk_table[chunk_idx].y0           = chunk_table[chunk_idx].y0 * rand_table[1];
             chunk_table[chunk_idx].scale_r      = chunk_table[chunk_idx].scale_r * rand_table[2];
@@ -101,11 +99,9 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
 
             chunk_table[chunk_idx].lsq = lsq;
             chunk_table[chunk_idx].iter_cnt++;
-
-            printf("Updated meta_idx=%i chunk_idx\n", chunk_idx, chunk_idx);
         }
 
-        printf("Sum vector: chunk_idx=%i sum=%f\n", chunk_idx, sum);
+        printf("Sum vector: chunk_idx=%i lsq=%f chunk_lsq=%f\n", chunk_idx, lsq, chunk_table[chunk_idx].lsq);
     }
 }
 
@@ -119,7 +115,7 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
     //printf("Point Square mag_idx=%i, chunk_idx=%i, meta_idx=%i\n", mag_idx, chunk_idx, meta_idx);
 
-    if ((idx < mag_len) && !(mag_table[mag_idx].disable)) {  // <---------------------------------------------- segmentation fault skapas nog här
+    if (idx < mag_len) {  // <---------------------------------------------- segmentation fault skapas nog här
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -171,10 +167,14 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
         //printf("quad_error,%f\n", quad_error);
 
-        error_table[mag_idx] = quad_error;
+        if (! mag_table[mag_idx].disable) {
+            error_table[mag_idx] = quad_error;
+        }
+        else {
+            error_table[mag_idx] = 0;
+        }
 
         //printf("first test x=%i, y=%i, x+y=%i\n", 3, 4, first_test(3,4));
-
      }
 }
 
@@ -185,6 +185,12 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
     printf("Device Launch\n");
 
+    // for (int i = 0; i < chunk_len; i++) {
+    //     //printf("chunk_idx=%i left_mag_idx=%i right_mag_idx=%i\n", i, chunk_table[i].left_mag_idx, chunk_table[i].right_mag_idx);
+    //     printf("chunk_idx=%i chunk_lsq=%f\n", i, chunk_table[i].lsq );
+    //
+    // }
+
     // ----------------------------- RANDOMIZE SETUP  -------------------------------------------
     int N = 5; // generate 5 random numbers
     curandState* devStates = (curandState*) malloc( N*sizeof(curandState));
@@ -193,18 +199,18 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
     setup_kernel<<<1,N>>>(devStates, clock64());
     // ------------------------------------------------------------------------------------------
 
-    int max_iter = 5; // Maximum iteration depth 100,000
+    int max_iter = 20; // Maximum iteration depth 100,000
 
     //for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++)
     for (int meta_idx=0; meta_idx<1; meta_idx++) {          // just for testing
-        //initialize_error_table(META_SIZE, CHUNK_SIZE);      // all values (LSQ) set to 100000
+        initialize_error_table(META_SIZE, CHUNK_SIZE);      //
         initialize_rand_table();                            // all values set to 1.00
 
         for (int round=0; round<max_iter; round++) {        // iterate 100.000 times
             printf("meta_idx=%i, round=%i\n", meta_idx, round);
 
             dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
-            //point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
+            point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
 
             cudaDeviceSynchronize();
 

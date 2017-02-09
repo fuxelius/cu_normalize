@@ -96,13 +96,13 @@ int main(int argc, char *argv[]) {
 
         int left_idx, right_idx;
         for (int rec_cnt=0; rec_cnt<chunk_len; rec_cnt++) {
-            printf("++-> %u | %u | %u |",rec_cnt, chunk_table[rec_cnt].left_seq_id, chunk_table[rec_cnt].right_seq_id);
-            printf(" %u | %u | ", chunk_table[rec_cnt].left_mag_idx, chunk_table[rec_cnt].right_mag_idx);
+            printf("++-> %u | %u | %u |",rec_cnt, chunk_table[rec_cnt].left_mag_idx, chunk_table[rec_cnt].right_mag_idx);
+            //(" %u | %u | ", chunk_table[rec_cnt].left_mag_idx, chunk_table[rec_cnt].right_mag_idx);
 
             left_idx = chunk_table[rec_cnt].left_mag_idx;
             right_idx = chunk_table[rec_cnt].right_mag_idx;
 
-            printf("%u | %u \n", mag_table[left_idx].seq_id, mag_table[right_idx].seq_id);
+            printf("%u | %u \n", mag_table[left_idx].mxt, mag_table[right_idx].myt);
 
         }
     #endif
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
             printf("scale_r %f\n", chunk_table[chunk_idx].scale_r);
             printf("scale_y_axis %f\n", chunk_table[chunk_idx].scale_y_axis);
             printf("theta %f\n", chunk_table[chunk_idx].theta);
-            printf("disable %i\n\n", chunk_table[chunk_idx].disable);
+            printf("disable %i\n\n", chunk_table[chunk_idx].outlier);
         }
     #endif
     //--------------------------------------------------------------------------
@@ -159,26 +159,47 @@ int main(int argc, char *argv[]) {
 
     // ============================================ CUDA START ============================================
 
-    // malloc device global memory
+
+    mag_record *d_mag_table;
     size_t mag_bytes = mag_len * sizeof(mag_record);
-    CHECK(cudaMallocManaged((void **)&mag_table, mag_bytes)); // use check from nvidia later
+    cudaMalloc((void **)&d_mag_table, mag_bytes);
+    cudaMemcpy(d_mag_table, mag_table, mag_bytes, cudaMemcpyHostToDevice);
 
+    chunk_record *d_chunk_table;
     size_t chunk_bytes = chunk_len * sizeof(chunk_record);
-    CHECK(cudaMallocManaged((void **)&chunk_table, chunk_bytes));
+    cudaMalloc((void **)&d_chunk_table, chunk_bytes);
+    cudaMemcpy(d_chunk_table, chunk_table, chunk_bytes, cudaMemcpyHostToDevice);
 
+    meta_record *d_meta_table;
     size_t meta_bytes = meta_len * sizeof(meta_record);
-    CHECK(cudaMallocManaged((void **)&meta_table, meta_bytes));
+    cudaMalloc((void **)&d_meta_table, meta_bytes);
+    cudaMemcpy(d_meta_table, meta_table, meta_bytes, cudaMemcpyHostToDevice);
 
-    host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
+    host_launch(d_chunk_table, chunk_len, d_mag_table, mag_len, d_meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
+
+    // // malloc device global memory
+    // size_t mag_bytes = mag_len * sizeof(mag_record);
+    // //CHECK(cudaMallocManaged((void **)&mag_table, mag_bytes));
+    // CHECK(cudaMallocManaged(&mag_table, mag_bytes));
+    //
+    // size_t chunk_bytes = chunk_len * sizeof(chunk_record);
+    // //CHECK(cudaMallocManaged((void **)&chunk_table, chunk_bytes));
+    // CHECK(cudaMallocManaged(&chunk_table, chunk_bytes));
+    //
+    // size_t meta_bytes = meta_len * sizeof(meta_record);
+    // //CHECK(cudaMallocManaged((void **)&meta_table, meta_bytes));
+    // CHECK(cudaMallocManaged(&meta_table, meta_bytes));
+
+    // host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
 
     CHECK(cudaDeviceSynchronize());
 
     CHECK(cudaGetLastError());
 
     // free device global memory
-    CHECK(cudaFree(mag_table));     // denna hanterar free på både host och device
-    CHECK(cudaFree(chunk_table));   // denna hanterar free på både host och device
-    CHECK(cudaFree(meta_table));    // denna hanterar free på både host och device
+    CHECK(cudaFree(d_mag_table));     // denna hanterar free på både host och device
+    CHECK(cudaFree(d_chunk_table));   // denna hanterar free på både host och device
+    CHECK(cudaFree(d_meta_table));    // denna hanterar free på både host och device
 
     // reset device
     CHECK(cudaDeviceReset());

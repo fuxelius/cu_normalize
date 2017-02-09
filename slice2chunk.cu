@@ -34,8 +34,9 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
         new_table[chunk_idx].left_mag_idx  = left_mag_idx;
         new_table[chunk_idx].right_mag_idx = right_mag_idx;
 
-        //new_table[chunk_idx].left_seq_id = mag_table[left_mag_idx].seq_id;
-        //new_table[chunk_idx].right_seq_id = mag_table[right_mag_idx].seq_id;
+        new_table[chunk_idx].lsq = 1000000000.0;    // Initialize to humongos big :)
+        new_table[chunk_idx].iter_cnt = 0;   // iteration count
+        new_table[chunk_idx].finish = 0;
 
         printf("1>chunk_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", chunk_idx, left_mag_idx, right_mag_idx);
     }
@@ -49,8 +50,14 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
         new_table[chunk_idx].left_mag_idx  = left_mag_idx;
         new_table[chunk_idx].right_mag_idx = right_mag_idx;
 
+        new_table[chunk_idx].lsq = 1000000000.0;    // Initialize to humongos big :)
+        new_table[chunk_idx].iter_cnt = 0;   // iteration count
+        new_table[chunk_idx].finish = 0;
+
         printf("2>chunk_idx=%i, left_mag_idx=%i, right_mag_idx=%i\n", chunk_idx, left_mag_idx, right_mag_idx);
     }
+
+
 
     *chunk_table = new_table;
 
