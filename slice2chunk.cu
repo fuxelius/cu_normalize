@@ -14,18 +14,20 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
 
     //*chunk_size = (wished_size/WARP_SIZE) * WARP_SIZE; // approximately the same size as chunk_size
     if (mag_len%chunk_size == 0) {
-        *chunk_len =  mag_len/chunk_size;      // evens out
+        *chunk_len =  mag_len/chunk_size;      // evens out ???????????????
     }
     else {
         *chunk_len =  mag_len/chunk_size + 1;  //                       <------------------------------------------- 2017-02-07
     }
 
-    printf("chunk_size=%i, chunk_len=%i, mag_len=%i\n\n", chunk_size, *chunk_len, mag_len);
+    //*chunk_len =  mag_len/chunk_size + 1;
+
+    printf("CHUNK_SIZE=%i, chunk_len=%i, mag_len=%i\n\n", chunk_size, *chunk_len, mag_len);
 
     chunk_record *new_table = (chunk_record*) malloc((*chunk_len) * sizeof(chunk_record));
 
-    int left_mag_idx;
-    int right_mag_idx;
+    int left_mag_idx = 0;
+    int right_mag_idx = 0;
 
     for (int chunk_idx=0; chunk_idx < (*chunk_len) - 1; chunk_idx++) {
         left_mag_idx = chunk_idx * chunk_size;
@@ -42,7 +44,7 @@ int slice2chunk_record(chunk_record **chunk_table, int *chunk_len, mag_record *m
     }
 
     // create last chunk by hand here
-    if (right_mag_idx < mag_len) {
+    if (right_mag_idx < mag_len) {   // <----------------------------------------------------------????????????????????????? FEL
         int chunk_idx = (*chunk_len) - 1;
         left_mag_idx = chunk_idx * chunk_size;
         right_mag_idx = mag_len -1;

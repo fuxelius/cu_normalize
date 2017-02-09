@@ -13,7 +13,7 @@ int slice2meta_record(meta_record **meta_table, int *meta_len, int chunk_len, in
         *meta_len = chunk_len / meta_size + 1;
     }
 
-    printf("\nchunk_len=%i, meta_size=%i, meta_len=%i\n", chunk_len, meta_size, *meta_len);
+    printf("\nchunk_len=%i, META_SIZE=%i, meta_len=%i\n", chunk_len, meta_size, *meta_len);
 
     meta_record *new_table= (meta_record*) malloc((*meta_len) * sizeof(meta_record));
 
