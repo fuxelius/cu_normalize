@@ -108,14 +108,14 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
 // ======================================================== POINT SQUARE ==================================================================
 // CUDA implementation, hold the number of (mxt, myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
 __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size, int meta_idx) {
+    int idx = threadIdx.x + blockIdx.x * blockDim.x; // position inside meta_idx
+    int chunk_idx = meta_idx*META_SIZE + idx / chunk_size;
+    int error_idx = idx;
+    int mag_idx = meta_idx*META_SIZE*chunk_size + idx;
 
-    int idx = threadIdx.x + blockIdx.x * blockDim.x;
-    int chunk_idx = meta_idx*META_SIZE  + idx / chunk_size;
-    int mag_idx = meta_idx*chunk_size + idx;
+    //printf("Point Square: meta_idx=%i idx=%i error_idx=%i chunk_idx=%i mag_idx=%i\n", meta_idx, idx, error_idx, chunk_idx, mag_idx);
 
-    //printf("Point Square mag_idx=%i, chunk_idx=%i, meta_idx=%i\n", mag_idx, chunk_idx, meta_idx);
-
-    if (idx < mag_len) {  // <---------------------------------------------- segmentation fault skapas nog här
+    if (idx < mag_len) {
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -167,11 +167,11 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
         //printf("quad_error,%f\n", quad_error);
 
-        if (! mag_table[mag_idx].disable) {
-            error_table[mag_idx] = quad_error;
+        if (! mag_table[error_idx].disable) {
+            error_table[error_idx] = quad_error;
         }
         else {
-            error_table[mag_idx] = 0;
+            error_table[error_idx] = 0;
         }
 
         //printf("first test x=%i, y=%i, x+y=%i\n", 3, 4, first_test(3,4));
@@ -201,8 +201,10 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
     int max_iter = 20; // Maximum iteration depth 100,000
 
-    //for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++)
-    for (int meta_idx=0; meta_idx<1; meta_idx++) {          // just for testing
+    for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
+    //for (int meta_idx=0; meta_idx<1; meta_idx++) {          // <--------------------------------------------------- krash bang bom
+        //int meta_idx=1;
+
         initialize_error_table(META_SIZE, CHUNK_SIZE);      //
         initialize_rand_table();                            // all values set to 1.00
 
