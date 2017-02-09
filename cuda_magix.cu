@@ -60,25 +60,14 @@ __global__ void generate_rand(curandState* globalState) {
 
 // ======================================================== SUM A VECTOR ===================================================================
 // this is probably very efficient ... if running on 100 processors in paralell ... and only 1024 loops ;)
-// __device__ float sum_vector(int chunk_idx, int chunk_size) {
-//     int off_set = chunk_idx*chunk_size;
-//     float sum = 0;
-//
-//     for (int idx=off_set; idx < off_set+chunk_size; idx++) {
-//         sum = sum + error_table[idx];
-//     }
-//
-//     printf("Sum vector: chunk_idx=%i sum=%f\n", chunk_idx, sum);
-//
-//     return sqrtf(sum);
-// }
 
-__global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chunk_size) {
+__global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chunk_len, int chunk_size, int meta_len) {
     int idx = threadIdx.x;
     int chunk_idx = meta_idx*META_SIZE + idx;
     int off_set = idx*chunk_size;
 
-    if (idx <= META_SIZE) {
+    //if (idx <= META_SIZE) {
+    if (chunk_idx < chunk_len && meta_idx < meta_len) {
         float sum = 0;
         for (int error_idx=off_set; error_idx < (off_set+chunk_size); error_idx++) {  // ??????????????????
             sum = sum + error_table[error_idx];
@@ -89,7 +78,7 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
         // if approximation is better update chunk_table[chunk_idx]
         if (lsq < chunk_table[chunk_idx].lsq) {
 
-            printf("Updated meta_idx=%i chunk_idx=%i old_lsq=%f new_lsq=%f\n", meta_idx, chunk_idx, chunk_table[chunk_idx].lsq, lsq);
+            printf("----->Updated meta_idx=%i chunk_idx=%i old_lsq=%f new_lsq=%f\n", meta_idx, chunk_idx, chunk_table[chunk_idx].lsq, lsq);
 
             chunk_table[chunk_idx].x0           = chunk_table[chunk_idx].x0 * rand_table[0];
             chunk_table[chunk_idx].y0           = chunk_table[chunk_idx].y0 * rand_table[1];
@@ -101,13 +90,14 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
             chunk_table[chunk_idx].iter_cnt++;
         }
 
-        printf("Sum vector: chunk_idx=%i lsq=%f chunk_lsq=%f\n", chunk_idx, lsq, chunk_table[chunk_idx].lsq);
+        //printf("----->Sum vector: chunk_idx=%i lsq=%f chunk_lsq=%f\n", chunk_idx, lsq, chunk_table[chunk_idx].lsq);
     }
 }
 
 // ======================================================== POINT SQUARE ==================================================================
 // CUDA implementation, hold the number of (mxt, myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
-__global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size, int meta_idx) {
+
+__global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size, int meta_idx, int meta_len) {
     int idx = threadIdx.x + blockIdx.x * blockDim.x; // position inside meta_idx
     int chunk_idx = meta_idx*META_SIZE + idx / chunk_size;
     int error_idx = idx;
@@ -115,7 +105,7 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
     //printf("Point Square: meta_idx=%i idx=%i error_idx=%i chunk_idx=%i mag_idx=%i\n", meta_idx, idx, error_idx, chunk_idx, mag_idx);
 
-    if (idx < mag_len) {
+    if (idx < mag_len && chunk_idx < chunk_len && meta_idx < meta_len) {
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -201,10 +191,7 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
     int max_iter = 20; // Maximum iteration depth 100,000
 
-    for (int meta_idx=0; meta_idx<META_SIZE; meta_idx++) {
-    //for (int meta_idx=0; meta_idx<1; meta_idx++) {          // <--------------------------------------------------- krash bang bom
-        //int meta_idx=1;
-
+    for (int meta_idx=0; meta_idx<meta_len; meta_idx++) {
         initialize_error_table(META_SIZE, CHUNK_SIZE);      //
         initialize_rand_table();                            // all values set to 1.00
 
@@ -212,11 +199,11 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
             printf("meta_idx=%i, round=%i\n", meta_idx, round);
 
             dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
-            point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
+            point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx, meta_len);
 
             cudaDeviceSynchronize();
 
-            sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, CHUNK_SIZE); // summera alla paralellt och uppdatera chunk
+            sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, chunk_len, CHUNK_SIZE, meta_len); // summera alla paralellt och uppdatera chunk
 
             cudaDeviceSynchronize();
 
