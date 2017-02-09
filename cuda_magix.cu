@@ -68,6 +68,7 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
 
     //if (idx <= META_SIZE) {
     if (chunk_idx < chunk_len && meta_idx < meta_len) {
+    //if (chunk_idx < chunk_len) {
         float sum = 0;
         for (int error_idx=off_set; error_idx < (off_set+chunk_size); error_idx++) {  // ??????????????????
             sum = sum + error_table[error_idx];
@@ -90,7 +91,7 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
             chunk_table[chunk_idx].iter_cnt++;
         }
 
-        //printf("----->Sum vector: chunk_idx=%i lsq=%f chunk_lsq=%f\n", chunk_idx, lsq, chunk_table[chunk_idx].lsq);
+        printf("----->Sum vector: chunk_idx=%i lsq=%f chunk_lsq=%f\n", chunk_idx, lsq, chunk_table[chunk_idx].lsq);
     }
 }
 
@@ -105,7 +106,7 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
     //printf("Point Square: meta_idx=%i idx=%i error_idx=%i chunk_idx=%i mag_idx=%i\n", meta_idx, idx, error_idx, chunk_idx, mag_idx);
 
-    if (idx < mag_len && chunk_idx < chunk_len && meta_idx < meta_len) {
+    if (idx < META_SIZE*chunk_size && chunk_idx < chunk_len && meta_idx < meta_len) {
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -216,7 +217,7 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
             printf("random=%f\n", rand_table[1]);
             printf("random=%f\n", rand_table[2]);
             printf("random=%f\n", rand_table[3]);
-            printf("random=%f\n", rand_table[4]);
+            printf("random=%f\n\n", rand_table[4]);
 
             //printf("LSQ=%f for chunk_idx=%i\n", lsq, chunk_idx);
         }
