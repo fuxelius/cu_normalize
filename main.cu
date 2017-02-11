@@ -231,18 +231,23 @@ int main(int argc, char *argv[]) {
 
     // ============================================ CUDA START 2 ============================================
 
-    // result_record *d_result_table;
-    // size_t result_bytes = mag_len * sizeof(result_record); // record_len = mag_len
-    // cudaMalloc((void **)&d_result_table, result_bytes);
-    // cudaMemcpy(d_result_table, result_table, result_bytes, cudaMemcpyHostToDevice);
-    //
-    // dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
-    //
-    // //rec2polar<<<grid,BLOCK_SIZE>>>(result_table, chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE); // record_len = mag_len
-    //
-    // cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
+    result_record *d_result_table;
+    size_t result_bytes = mag_len * sizeof(result_record); // record_len = mag_len
+    cudaMalloc((void **)&d_result_table, result_bytes);
+    cudaMemcpy(d_result_table, result_table, result_bytes, cudaMemcpyHostToDevice);
 
+    dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
 
+    //rec2polar<<<grid,BLOCK_SIZE>>>(result_table, chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE); // record_len = mag_len
+
+    cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
+
+    // printf("mfv, rho\n");
+    // for (int i=0; i<mag_len; i++ ) {
+    //     float mfv = result_table[i].mfv;
+    //     float rho = result_table[i].rho;
+    //     printf("%f, %f\n", mfv, rho);
+    // }
 
     // ============================================ CUDA END ============================================
 
