@@ -176,22 +176,14 @@ int main(int argc, char *argv[]) {
     cudaMalloc((void **)&d_meta_table, meta_bytes);
     cudaMemcpy(d_meta_table, meta_table, meta_bytes, cudaMemcpyHostToDevice);
 
+    result_record *d_result_table;
+    size_t result_bytes = mag_len * sizeof(result_record);
+    cudaMalloc((void **)&d_result_table, result_bytes);
+    cudaMemcpy(d_result_table, result_table, result_bytes, cudaMemcpyHostToDevice);
+
+    //CHECK(cudaDeviceSynchronize()); // behövs denna här ??
+
     host_launch(d_chunk_table, chunk_len, d_mag_table, mag_len, d_meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
-
-    // // malloc device global memory
-    // size_t mag_bytes = mag_len * sizeof(mag_record);
-    // //CHECK(cudaMallocManaged((void **)&mag_table, mag_bytes));
-    // CHECK(cudaMallocManaged(&mag_table, mag_bytes));
-    //
-    // size_t chunk_bytes = chunk_len * sizeof(chunk_record);
-    // //CHECK(cudaMallocManaged((void **)&chunk_table, chunk_bytes));
-    // CHECK(cudaMallocManaged(&chunk_table, chunk_bytes));
-    //
-    // size_t meta_bytes = meta_len * sizeof(meta_record);
-    // //CHECK(cudaMallocManaged((void **)&meta_table, meta_bytes));
-    // CHECK(cudaMallocManaged(&meta_table, meta_bytes));
-
-    // host_launch(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
 
     CHECK(cudaDeviceSynchronize());
 
@@ -225,29 +217,30 @@ int main(int argc, char *argv[]) {
     }
 
 
-    // histogram - ta bort och extra/inter-polera fram outliers av x0, y0
+    // ============================================ X0Y0 HISTOGRAM ============================================
 
 
 
     // ============================================ CUDA START 2 ============================================
 
-    result_record *d_result_table;
-    size_t result_bytes = mag_len * sizeof(result_record); // record_len = mag_len
-    cudaMalloc((void **)&d_result_table, result_bytes);
-    cudaMemcpy(d_result_table, result_table, result_bytes, cudaMemcpyHostToDevice);
+
+    //CHECK(cudaDeviceSynchronize()); // behövs denna här ??
 
     dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+    rec2polar<<<grid,BLOCK_SIZE>>>(d_result_table, d_chunk_table, chunk_len, d_mag_table, mag_len, CHUNK_SIZE); // record_len = mag_len
 
-    //rec2polar<<<grid,BLOCK_SIZE>>>(result_table, chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE); // record_len = mag_len
+    CHECK(cudaDeviceSynchronize()); // behövs denna här ??
 
     cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
 
-    // printf("mfv, rho\n");
-    // for (int i=0; i<mag_len; i++ ) {
-    //     float mfv = result_table[i].mfv;
-    //     float rho = result_table[i].rho;
-    //     printf("%f, %f\n", mfv, rho);
-    // }
+    //CHECK(cudaDeviceSynchronize()); // behövs denna här ??
+
+    printf("mfv, rho\n");
+    for (int i=0; i<mag_len; i++ ) {
+        float mfv = result_table[i].mfv;
+        float rho = result_table[i].rho;
+        printf("%f, %f\n", mfv, rho);
+    }
 
     // ============================================ CUDA END ============================================
 

@@ -75,8 +75,10 @@ __global__ void rec2polar(result_record *result_table, chunk_record *chunk_table
             rho = rho + 2*PI;
         }
 
-        result_table[mag_idx].mfv = mfv;
-        result_table[mag_idx].rho = rho;
+        //if (!mag_table[mag_idx].disable) { // <------------------------------------------------------------ temporary only for printouts
+            result_table[mag_idx].mfv = mfv;
+            result_table[mag_idx].rho = rho;
+        //}
 
      }
 }
