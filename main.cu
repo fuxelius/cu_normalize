@@ -15,6 +15,7 @@
 
 #include "cuda_magix.h"
 #include "device_info.h"
+#include "polar.h"
 
 
 // plot_raw_filtered print all raw data between left_chunk_idx and right_chunk_idx with outliers excluded.
@@ -157,7 +158,7 @@ int main(int argc, char *argv[]) {
     //     }
     // }
 
-    // ============================================ CUDA START ============================================
+    // ============================================ CUDA START 1 ============================================
 
 
     mag_record *d_mag_table;
@@ -194,23 +195,71 @@ int main(int argc, char *argv[]) {
 
     CHECK(cudaDeviceSynchronize());
 
-    CHECK(cudaGetLastError());
+    cudaMemcpy(chunk_table, d_chunk_table, chunk_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
 
-    // free device global memory
-    CHECK(cudaFree(d_mag_table));     // denna hanterar free på både host och device
-    CHECK(cudaFree(d_chunk_table));   // denna hanterar free på både host och device
-    CHECK(cudaFree(d_meta_table));    // denna hanterar free på både host och device
 
-    // reset device
-    CHECK(cudaDeviceReset());
+
+
 
     // ============================================ CUDA END ============================================
+
 
 
     // for (int i=0; i<mag_len; i++) {
     //   printf("cuda,%f,%f\n", result_table[i].mfv, result_table[i].rho);
     // }
 
-    return 0;
+    // for (int i=0; i<chunk_len; i++) {
+    //   printf("chunk_idx \t%i\n", i);
+    //   printf("x0 \t\t%f\n", chunk_table[i].x0);
+    //   printf("y0 \t\t%f\n", chunk_table[i].y0);
+    //   printf("scale_r \t%f\n", chunk_table[i].scale_r);
+    //   printf("scale_y_axis \t%f\n", chunk_table[i].scale_y_axis);
+    //   printf("theta \t\t%f\n\n", chunk_table[i].theta);
+    //   printf("iter_cnt \t%f\n\n", chunk_table[i].iter_cnt);
+    // }
 
+    printf("chunk_idx, x0, y0\n");
+    for (int i=0; i<chunk_len; i++) {
+      printf("%i, %f, %f\n", i, chunk_table[i].x0, chunk_table[i].y0);
+    }
+
+
+    // histogram - ta bort och extra/inter-polera fram outliers av x0, y0
+
+
+
+    // ============================================ CUDA START 2 ============================================
+
+    // result_record *d_result_table;
+    // size_t result_bytes = mag_len * sizeof(result_record); // record_len = mag_len
+    // cudaMalloc((void **)&d_result_table, result_bytes);
+    // cudaMemcpy(d_result_table, result_table, result_bytes, cudaMemcpyHostToDevice);
+    //
+    // dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
+    //
+    // //rec2polar<<<grid,BLOCK_SIZE>>>(result_table, chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE); // record_len = mag_len
+    //
+    // cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
+
+
+
+    // ============================================ CUDA END ============================================
+
+    // free device global memory
+    CHECK(cudaFree(d_mag_table));     // denna hanterar free på både host och device
+    CHECK(cudaFree(d_chunk_table));   // denna hanterar free på både host och device
+    CHECK(cudaFree(d_meta_table));    // denna hanterar free på både host och device
+
+    CHECK(cudaGetLastError());
+
+    // reset device
+    CHECK(cudaDeviceReset());
+
+    free(mag_table);
+    free(chunk_table);
+    free(meta_table);
+    free(result_table);
+
+    return 0;
 }

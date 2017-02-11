@@ -2,15 +2,6 @@
 #define CHUNK_SIZE 1024     // HAS TO BE A **MULTIPLE** OF BLOCK_SIZE; how many magvalues to minimize in each step;
 #define META_SIZE 10        // default=100 how many chunks to handle each time on the devie (constant memory)
 
-// result_struct has the same length as mag_record = mag_table
-// They both have the same index, so indexing into result_struct[i].seq_id
-// refers back to the structure of the database. 96 bytes
-typedef struct {       // Host only, takes to much space for device (20*10^6 entries (2 years) => 2Gbyte)
-    int seq_id;
-    float mfv;
-    float rho;
-} result_record;
-
 // Magnetometer data implemented as an array of structs
 // 33 bytes/record => 20*10^6 entries (2 years) => 660 Mbyte of datastructure
 typedef struct {       // Host and device
@@ -36,7 +27,7 @@ typedef struct {            // Magnetometer data implement as an array of struct
     // these should probably live in a matrix
     float lsq;              // least square for an iteration of the elements in chunk_table[chunk_idx]
     int iter_cnt;           // If lest square is not lower for iter_cnt cycles
-    bool finish;             // then set the thread for this chunk to finish
+    bool finish;            // then set the thread for this chunk to finish
 } chunk_record;
 
 // Partitions how many chunks to run in paralell on device:
@@ -46,3 +37,12 @@ typedef struct {
     int left_chunk_idx;
     int right_chunk_idx;
 } meta_record;
+
+// result_struct has the same length as mag_record = mag_table
+// They both have the same index, so indexing into result_struct[i].seq_id
+// refers back to the structure of the database. 96 bytes
+typedef struct {       // Host only, takes to much space for device (20*10^6 entries (2 years) => 2Gbyte)
+    int seq_id;
+    float mfv;
+    float rho;
+} result_record;

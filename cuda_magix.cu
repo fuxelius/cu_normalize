@@ -107,9 +107,11 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
     //printf("Point Square: meta_idx=%i idx=%i error_idx=%i chunk_idx=%i mag_idx=%i\n", meta_idx, idx, error_idx, chunk_idx, mag_idx);
 
-    if (mag_idx < mag_len && chunk_idx < chunk_len && error_idx < META_SIZE*chunk_size) {
+    // cut out all other created threads based on threadIdx.x, otherwise they WILL write out of bound -- and krashes :(
+    if (!mag_table[error_idx].disable && mag_idx < mag_len && chunk_idx < chunk_len && error_idx < META_SIZE*chunk_size) {
     //if (mag_idx < mag_len && chunk_idx < chunk_len && meta_idx < meta_len) { // cut out all other created threads based on threadIdx.x
     //if (idx < META_SIZE*chunk_size && chunk_idx < chunk_len && meta_idx < meta_len) { // cut out all other created threads based on threadIdx.x
+    
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -161,14 +163,19 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
         //printf("quad_error,%f\n", quad_error);
 
-        if (! mag_table[error_idx].disable) {
-            error_table[error_idx] = quad_error;
-        }
-        else {
-            error_table[error_idx] = 0;
-        }
+        // if (! mag_table[error_idx].disable) {
+        //     error_table[error_idx] = quad_error;
+        // }
+        // else {
+        //     error_table[error_idx] = 0;
+        // }
+
+        error_table[error_idx] = quad_error;
 
         //printf("first test x=%i, y=%i, x+y=%i\n", 3, 4, first_test(3,4));
+     }
+     else {
+        error_table[error_idx] = 0;
      }
 }
 
@@ -193,7 +200,7 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
     setup_kernel<<<1,N>>>(devStates, clock64());
     // ------------------------------------------------------------------------------------------
 
-    int max_iter = 20; // Maximum iteration depth 100,000
+    int max_iter = 200; // Maximum iteration depth 100,000
 
     for (int meta_idx=0; meta_idx<meta_len; meta_idx++) {
         initialize_error_table(META_SIZE, CHUNK_SIZE);      //
