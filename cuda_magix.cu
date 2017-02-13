@@ -200,14 +200,14 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
     setup_kernel<<<1,N>>>(devStates, clock64());
     // ------------------------------------------------------------------------------------------
 
-    int max_iter = 200; // Maximum iteration depth 100,000
+    int max_iter = 2000; // Maximum iteration depth 100,000
 
     for (int meta_idx=0; meta_idx<meta_len; meta_idx++) {
         initialize_error_table(META_SIZE, CHUNK_SIZE);      //
         initialize_rand_table();                            // all values set to 1.00
 
         for (int round=0; round<max_iter; round++) {        // iterate 100.000 times
-            printf("meta_idx=%i, round=%i\n", meta_idx, round);
+            //printf("meta_idx=%i, round=%i\n", meta_idx, round);
 
             dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
             point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
@@ -225,11 +225,11 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
             //cudaDeviceSynchronize();
 
-            printf("random=%f\n", rand_table[0]);
-            printf("random=%f\n", rand_table[1]);
-            printf("random=%f\n", rand_table[2]);
-            printf("random=%f\n", rand_table[3]);
-            printf("random=%f\n\n", rand_table[4]);
+            // printf("random=%f\n", rand_table[0]);
+            // printf("random=%f\n", rand_table[1]);
+            // printf("random=%f\n", rand_table[2]);
+            // printf("random=%f\n", rand_table[3]);
+            // printf("random=%f\n\n", rand_table[4]);
 
             //printf("LSQ=%f for chunk_idx=%i\n", lsq, chunk_idx);
         }
