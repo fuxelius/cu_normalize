@@ -16,6 +16,7 @@
 #include "cuda_magix.h"
 #include "device_info.h"
 #include "polar.h"
+#include "x0y0_histogram.h"
 
 
 // plot_raw_filtered print all raw data between left_chunk_idx and right_chunk_idx with outliers excluded.
@@ -181,8 +182,6 @@ int main(int argc, char *argv[]) {
     cudaMalloc((void **)&d_result_table, result_bytes);
     cudaMemcpy(d_result_table, result_table, result_bytes, cudaMemcpyHostToDevice);
 
-    //CHECK(cudaDeviceSynchronize()); // behövs denna här ??
-
     host_launch(d_chunk_table, chunk_len, d_mag_table, mag_len, d_meta_table, meta_len); // <--------- MAIN() CUDA CALL (ONLY ONE THREAD)
 
     CHECK(cudaDeviceSynchronize());
@@ -219,12 +218,34 @@ int main(int argc, char *argv[]) {
 
     // ============================================ X0Y0 HISTOGRAM ============================================
 
+    // since each value represent CHUNK_SIZE (1024) mag values the number of x0y0 will be very low and it is
+    // impossible to make any statistics:
+    // Therefore: set cut_off = 1 for low lengths on chunk_table
+
+    // x0y0_bin x0y0_cut_off<------------------------------------------------------------------------------------- måste gå att ändra via argv som input värde
+
+    int x0y0_range = 100;    // => (-500,+500)
+    int x0y0_bin = 10;
+    int x0y0_cut_off = 2;
+
+    if (chunk_len < 100) {
+        x0y0_bin   = 10;      // size of each bin
+        x0y0_cut_off = 2;    // cut off on both sides of origo where < cut_off in a bin     <------------------------------ MUST BE 0 at short tests in time
+    }
+    else {
+        x0y0_bin   = 5;      // size of each bin
+        x0y0_cut_off = 5;    // cut off on both sides of origo where < cut_off in a bin     <------------------------------ MUST BE 0 at short tests in time
+    }
+
+
+    x0y0_histogram(chunk_table, chunk_len, x0y0_bin, x0y0_range, x0y0_cut_off);
+
+    // 1) calculate the geometric mid-point ofnon-outliers; x0, y0, scale-r, scale-y and theta (theta can be turned 2*PI - a problem)
+    // 2) update all data in chunk_table
 
 
     // ============================================ CUDA START 2 ============================================
 
-
-    //CHECK(cudaDeviceSynchronize()); // behövs denna här ??
 
     dim3 grid((mag_len + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
     rec2polar<<<grid,BLOCK_SIZE>>>(d_result_table, d_chunk_table, chunk_len, d_mag_table, mag_len, CHUNK_SIZE); // record_len = mag_len
@@ -232,8 +253,6 @@ int main(int argc, char *argv[]) {
     CHECK(cudaDeviceSynchronize()); // behövs denna här ??
 
     cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
-
-    //CHECK(cudaDeviceSynchronize()); // behövs denna här ??
 
     printf("mfv, rho\n");
     for (int i=0; i<mag_len; i++ ) {

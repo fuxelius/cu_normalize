@@ -111,7 +111,7 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
     if (!mag_table[error_idx].disable && mag_idx < mag_len && chunk_idx < chunk_len && error_idx < META_SIZE*chunk_size) {
     //if (mag_idx < mag_len && chunk_idx < chunk_len && meta_idx < meta_len) { // cut out all other created threads based on threadIdx.x
     //if (idx < META_SIZE*chunk_size && chunk_idx < chunk_len && meta_idx < meta_len) { // cut out all other created threads based on threadIdx.x
-    
+
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -213,17 +213,17 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
             point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
             //point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx, meta_len);
 
-            cudaDeviceSynchronize();
+            //cudaDeviceSynchronize();
 
             //sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, chunk_len, CHUNK_SIZE, meta_len); // summera alla paralellt och uppdatera chunk
             sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, chunk_len, CHUNK_SIZE); // summera alla paralellt och uppdatera chunk
 
-            cudaDeviceSynchronize();
+            //cudaDeviceSynchronize();
 
             // generate random numbers
             generate_rand<<<1,N>>>(devStates);
 
-            cudaDeviceSynchronize();
+            //cudaDeviceSynchronize();
 
             printf("random=%f\n", rand_table[0]);
             printf("random=%f\n", rand_table[1]);

@@ -1,6 +1,6 @@
 #define BLOCK_SIZE 256      // IE CUDA block size
 #define CHUNK_SIZE 1024     // HAS TO BE A **MULTIPLE** OF BLOCK_SIZE; how many magvalues to minimize in each step;
-#define META_SIZE 10        // default=100 how many chunks to handle each time on the devie (constant memory)
+#define META_SIZE 100        // default=100 how many chunks to handle each time on the devie (constant memory)
 
 // Magnetometer data implemented as an array of structs
 // 33 bytes/record => 20*10^6 entries (2 years) => 660 Mbyte of datastructure
