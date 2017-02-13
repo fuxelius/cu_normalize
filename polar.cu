@@ -26,7 +26,7 @@ __global__ void rec2polar(result_record *result_table, chunk_record *chunk_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
 
-        // // chunk_table, temporary values
+        // chunk_table, temporary values
         float x0            = chunk_table[chunk_idx].x0;
         float y0            = chunk_table[chunk_idx].y0;
         float scale_r       = chunk_table[chunk_idx].scale_r;
@@ -75,7 +75,7 @@ __global__ void rec2polar(result_record *result_table, chunk_record *chunk_table
             rho = rho + 2*PI;
         }
 
-        //if (!mag_table[mag_idx].disable) { // <------------------------------------------------------------ temporary only for printouts
+        //if (!mag_table[mag_idx].disable) { // <------------------------------------------------------------ temporary ENABLE for printouts
             result_table[mag_idx].mfv = mfv;
             result_table[mag_idx].rho = rho;
         //}

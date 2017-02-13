@@ -99,7 +99,6 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
 // CUDA implementation, hold the number of (mxt, myt) pairs <= 1024 to fit on a single SM, important for calculating the sum??!!
 
 __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size, int meta_idx) {
-//__global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, int chunk_size, int meta_idx, int meta_len) {
     int idx = threadIdx.x + blockIdx.x * blockDim.x; // position inside meta_idx
     int chunk_idx = meta_idx*META_SIZE + idx / chunk_size;
     int error_idx = idx;
@@ -109,9 +108,7 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
     // cut out all other created threads based on threadIdx.x, otherwise they WILL write out of bound -- and krashes :(
     if (!mag_table[error_idx].disable && mag_idx < mag_len && chunk_idx < chunk_len && error_idx < META_SIZE*chunk_size) {
-    //if (mag_idx < mag_len && chunk_idx < chunk_len && meta_idx < meta_len) { // cut out all other created threads based on threadIdx.x
-    //if (idx < META_SIZE*chunk_size && chunk_idx < chunk_len && meta_idx < meta_len) { // cut out all other created threads based on threadIdx.x
-
+      
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -192,6 +189,8 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
     //
     // }
 
+    initialize_error_table(META_SIZE, CHUNK_SIZE);      // Malloc
+
     // ----------------------------- RANDOMIZE SETUP  -------------------------------------------
     int N = 5; // generate 5 random numbers
     curandState* devStates = (curandState*) malloc( N*sizeof(curandState));
@@ -200,10 +199,11 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
     setup_kernel<<<1,N>>>(devStates, clock64());
     // ------------------------------------------------------------------------------------------
 
-    int max_iter = 2000; // Maximum iteration depth 100,000
+
+    int max_iter = 20000; // Maximum iteration depth 100,000
 
     for (int meta_idx=0; meta_idx<meta_len; meta_idx++) {
-        initialize_error_table(META_SIZE, CHUNK_SIZE);      //
+
         initialize_rand_table();                            // all values set to 1.00
 
         for (int round=0; round<max_iter; round++) {        // iterate 100.000 times
@@ -211,19 +211,10 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
             dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
             point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
-            //point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx, meta_len);
 
-            //cudaDeviceSynchronize();
-
-            //sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, chunk_len, CHUNK_SIZE, meta_len); // summera alla paralellt och uppdatera chunk
             sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, chunk_len, CHUNK_SIZE); // summera alla paralellt och uppdatera chunk
 
-            //cudaDeviceSynchronize();
-
-            // generate random numbers
-            generate_rand<<<1,N>>>(devStates);
-
-            //cudaDeviceSynchronize();
+            generate_rand<<<1,N>>>(devStates); // generate random numbers
 
             // printf("random=%f\n", rand_table[0]);
             // printf("random=%f\n", rand_table[1]);
@@ -245,6 +236,10 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
 // ========================================================== HOST LAUNCH ==================================================================
 void host_launch(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, meta_record *meta_table, int meta_len) {
+    //cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, 4);
+    //cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 32768);
+
     printf("Host Launch:\n");
+
     cuda_main<<<1,1>>>(chunk_table, chunk_len, mag_table, mag_len, meta_table, meta_len); // Kernel running on only one single core
 }
