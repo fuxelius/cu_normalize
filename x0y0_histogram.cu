@@ -190,43 +190,35 @@ int x0y0_histogram(chunk_record *chunk_table, int chunk_len, int bin, int range,
     if (x0_pos_idx != -1 && x0_neg_idx != -1) {  // both sides of origo
         x0_boundry_high = (float) (bin+1) * x0_pos_idx;
         x0_boundry_low  = (float) (-bin-1) * x0_neg_idx;
-
-        //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
     }
     else if (x0_pos_idx != -1) { // only positive side of origo
             x0_boundry_high = (float) (bin+1) * x0_pos_idx;
             x0_boundry_low  = (float) (bin-1) * x0_pos_idx_rev;
-            //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
         }
         else { // mxt_neg_idx != -1, only negative side of origo
             x0_boundry_high = (float) (-bin+1) * x0_neg_idx_rev;
             x0_boundry_low  = (float) (-bin-1) * x0_neg_idx;
-            //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
         }
 
-    //printf("\nx=<%f,%f>\n", mxt_boundry_low, mxt_boundry_high);
+    printf("\nx_limit=<%f,%f>\n", x0_boundry_low, x0_boundry_high);
 
     // if elements > cut_off exist on both sides of origo
     if (y0_pos_idx != -1 && y0_neg_idx != -1) {  // both sides of origo
         y0_boundry_high = (float) (bin+1) * y0_pos_idx;
         y0_boundry_low  = (float) (-bin-1) * y0_neg_idx;
-
-        //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
     }
     else if (y0_pos_idx != -1) { // only positive side of origo
             y0_boundry_high = (float) (bin+1) * y0_pos_idx;
             y0_boundry_low  = (float) (bin-1) * y0_pos_idx_rev;
-            //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
         }
         else { // myt_neg_idx != -1, only negative side of origo
             y0_boundry_high = (float) (-bin+1) * y0_neg_idx_rev;
             y0_boundry_low  = (float) (-bin-1) * y0_neg_idx;
-            //printf("\ny=<%f,%f>\n", myt_boundry_low, myt_boundry_high);
         }
 
-    //printf("y=<%f,%f>\n\n", myt_boundry_low, myt_boundry_high);
+    printf("y_limit=<%f,%f>\n\n", y0_boundry_low, y0_boundry_high);
 
-    printf("x0,y0");
+    printf("x0,y0\n");
 
     // 1) loop throught mxt,myt and set the outliers in mag_table->outlier
     //for (int mag_idx = chunk_table[left_chunk_idx].left_mag_idx; mag_idx <= chunk_table[right_chunk_idx].right_mag_idx; mag_idx++)
@@ -245,6 +237,30 @@ int x0y0_histogram(chunk_record *chunk_table, int chunk_len, int bin, int range,
         }
     }
 
+    float x0_sum = 0;               // seed_x första gången i iterationen
+    float y0_sum = 0;               // seed_y första gången i iterationen
+    float scale_r_sum = 0;          // seed_scale_r första gången i iterationen
+    float scale_y_axis_sum = 0;     // = 1 första gången i iterationen
+    float theta_sum = 0;            // = 0 första gången i iterationen
+
+    int N=0; // counter
+
+    for (int chunk_idx = 0; chunk_idx < chunk_len; chunk_idx++) {
+        if (chunk_table[chunk_idx].outlier == 0) {
+            x0_sum += chunk_table[chunk_idx].x0;
+            y0_sum += chunk_table[chunk_idx].y0;
+            scale_r_sum += chunk_table[chunk_idx].scale_r;
+            scale_y_axis_sum += chunk_table[chunk_idx].scale_y_axis;
+            theta_sum += chunk_table[chunk_idx].theta;
+            N++;
+        }
+    }
+
+    printf("x_0: %f\n", x0_sum/N);
+    printf("y_0: %f\n", y0_sum/N);
+    printf("scale_r: %f\n", scale_r_sum/N);
+    printf("scale_y_axis: %f\n", scale_y_axis_sum/N);
+    printf("theta:% f\n", theta_sum/N);
 
     // inter/extra-polera fram x0y0 för alla outliers
 

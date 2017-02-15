@@ -225,12 +225,12 @@ int main(int argc, char *argv[]) {
     // x0y0_bin x0y0_cut_off<------------------------------------------------------------------------------------- måste gå att ändra via argv som input värde
 
     int x0y0_range = 100;    // => (-500,+500)
-    int x0y0_bin = 10;
-    int x0y0_cut_off = 2;
+    int x0y0_bin;
+    int x0y0_cut_off;
 
     if (chunk_len < 100) {
         x0y0_bin   = 10;      // size of each bin
-        x0y0_cut_off = 2;    // cut off on both sides of origo where < cut_off in a bin     <------------------------------ MUST BE 0 at short tests in time
+        x0y0_cut_off = 5;    // cut off on both sides of origo where < cut_off in a bin     <------------------------------ MUST BE 0 at short tests in time
     }
     else {
         x0y0_bin   = 5;      // size of each bin
@@ -240,8 +240,9 @@ int main(int argc, char *argv[]) {
 
     x0y0_histogram(chunk_table, chunk_len, x0y0_bin, x0y0_range, x0y0_cut_off);
 
-    // 1) calculate the geometric mid-point ofnon-outliers; x0, y0, scale-r, scale-y and theta (theta can be turned 2*PI - a problem)
-    // 2) update all data in chunk_table
+    // 1) calculate the geometric mid-point of non-outliers; x0, y0, scale-r, scale-y and theta (theta can be turned 2*PI - a problem)
+    // 2) update all entries in chunk_table
+    // 3) generate mfv, rho
 
 
     // ============================================ CUDA START 2 ============================================
@@ -254,12 +255,12 @@ int main(int argc, char *argv[]) {
 
     cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
 
-    printf("mfv, rho\n");
-    for (int i=0; i<mag_len; i++ ) {
-        float mfv = result_table[i].mfv;
-        float rho = result_table[i].rho;
-        printf("%f, %f\n", mfv, rho);
-    }
+    // printf("mfv, rho\n");
+    // for (int i=0; i<mag_len; i++ ) {
+    //     float mfv = result_table[i].mfv;
+    //     float rho = result_table[i].rho;
+    //     printf("%f, %f\n", mfv, rho);
+    // }
 
     // ============================================ CUDA END ============================================
 
