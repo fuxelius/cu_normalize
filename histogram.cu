@@ -246,7 +246,7 @@ int histogram(chunk_record *chunk_table, int *chunk_len, mag_record *mag_table, 
         chunk_table[chunk_idx].y0 = seed_y;
         chunk_table[chunk_idx].scale_r = seed_scale_r;
         chunk_table[chunk_idx].scale_y_axis = 1;
-        chunk_table[chunk_idx].theta = 0;
+        chunk_table[chunk_idx].theta = 1;
         chunk_table[chunk_idx].outlier = 0;
 
     }

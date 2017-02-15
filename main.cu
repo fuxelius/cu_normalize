@@ -134,31 +134,6 @@ int main(int argc, char *argv[]) {
     #endif
     //--------------------------------------------------------------------------
 
-    // int chunk_idx = 0;
-    //
-    // // tested model
-    // short mxt      =  200;
-    // short myt      =  -30;
-    // float x0       =   16;
-    // float y0       =  -124;
-    // float scale_r  = 0.0041;
-    // float scale_y  = 1.045; // 1.045
-    // float rotate   = 0.0;
-    //
-    // float normalized_x;  // Return value
-    // float normalized_y;  // Return value
-    // float quad_error;    // Return value
-    //
-    // for (int mag_idx = chunk_table[chunk_idx].left_mag_idx; mag_idx <= chunk_table[chunk_idx].right_mag_idx; mag_idx++) {
-    //     mxt = mag_table[mag_idx].mxt;
-    //     myt = mag_table[mag_idx].myt;
-    //
-    //     if (!mag_table[mag_idx].disable) {
-    //         point_square(mxt, myt, x0, y0, scale_r, scale_y, rotate, &normalized_x, &normalized_y, &quad_error);
-    //         //printf("%f,%f\n", normalized_x, normalized_y);
-    //     }
-    // }
-
     // ============================================ CUDA START 1 ============================================
 
 
@@ -237,12 +212,9 @@ int main(int argc, char *argv[]) {
         x0y0_cut_off = 5;    // cut off on both sides of origo where < cut_off in a bin     <------------------------------ MUST BE 0 at short tests in time
     }
 
-
-    x0y0_histogram(chunk_table, chunk_len, x0y0_bin, x0y0_range, x0y0_cut_off);
-
     // 1) calculate the geometric mid-point of non-outliers; x0, y0, scale-r, scale-y and theta (theta can be turned 2*PI - a problem)
     // 2) update all entries in chunk_table
-    // 3) generate mfv, rho
+    x0y0_histogram(chunk_table, chunk_len, x0y0_bin, x0y0_range, x0y0_cut_off);
 
 
     // ============================================ CUDA START 2 ============================================
@@ -255,12 +227,18 @@ int main(int argc, char *argv[]) {
 
     cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
 
-    // printf("mfv, rho\n");
-    // for (int i=0; i<mag_len; i++ ) {
-    //     float mfv = result_table[i].mfv;
-    //     float rho = result_table[i].rho;
-    //     printf("%f, %f\n", mfv, rho);
-    // }
+    printf("mfv, rho\n");
+    for (int i=0; i<mag_len; i++ ) {
+        float mfv = result_table[i].mfv;
+        float rho = result_table[i].rho;
+        printf("%f, %f\n", mfv, rho);
+    }
+
+
+
+    // 2) skriv tillbaka till databasen
+
+
 
     // ============================================ CUDA END ============================================
 

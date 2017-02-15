@@ -251,16 +251,30 @@ int x0y0_histogram(chunk_record *chunk_table, int chunk_len, int bin, int range,
             y0_sum += chunk_table[chunk_idx].y0;
             scale_r_sum += chunk_table[chunk_idx].scale_r;
             scale_y_axis_sum += chunk_table[chunk_idx].scale_y_axis;
-            theta_sum += chunk_table[chunk_idx].theta;
+            theta_sum += chunk_table[chunk_idx].theta;  // <------------------------------- THIS IS A WEAK POINT IF IT SHIFTS PI(3.14) DEGREES
             N++;
         }
     }
 
-    printf("x_0: %f\n", x0_sum/N);
-    printf("y_0: %f\n", y0_sum/N);
-    printf("scale_r: %f\n", scale_r_sum/N);
-    printf("scale_y_axis: %f\n", scale_y_axis_sum/N);
-    printf("theta:% f\n", theta_sum/N);
+    float x0_avg = x0_sum/N;
+    float y0_avg = y0_sum/N;
+    float scale_r_avg = scale_r_sum/N;
+    float scale_y_axis_avg = scale_y_axis_sum/N;
+    float theta_avg = theta_sum/N;
+
+    printf("x_0: %f\n", x0_avg);
+    printf("y_0: %f\n", y0_avg);
+    printf("scale_r: %f\n", scale_r_avg);
+    printf("scale_y_axis: %f\n", scale_y_axis_avg);
+    printf("theta:% f\n", theta_avg);
+
+    for (int chunk_idx = 0; chunk_idx < chunk_len; chunk_idx++) {
+        chunk_table[chunk_idx].x0 = x0_avg;
+        chunk_table[chunk_idx].y0 = y0_avg;
+        chunk_table[chunk_idx].scale_r = scale_r_avg;
+        chunk_table[chunk_idx].scale_y_axis = scale_y_axis_avg;
+        chunk_table[chunk_idx].theta = theta_avg;
+    }
 
     // inter/extra-polera fram x0y0 för alla outliers
 

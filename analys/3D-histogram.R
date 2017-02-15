@@ -25,3 +25,5 @@ plot(x,y)
 ##  Plot as a 3D histogram:
 #hist3D(z=z, border="black")
 
+## Polar plot
+#plot(cos(apa2$rho)*apa2$mfv,sin(apa2$rho)*apa2$mfv,xlim=c(-1.2, 1.2), ylim=c(-1.2, 1.2))
