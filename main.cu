@@ -17,6 +17,7 @@
 #include "device_info.h"
 #include "polar.h"
 #include "x0y0_histogram.h"
+#include "result2db.h"
 
 
 // plot_raw_filtered print all raw data between left_chunk_idx and right_chunk_idx with outliers excluded.
@@ -237,7 +238,7 @@ int main(int argc, char *argv[]) {
 
 
     // 2) skriv tillbaka till databasen
-
+    result2db(buffer_Z, result_table, mag_len); // result_len == mag_len
 
 
     // ============================================ CUDA END ============================================
