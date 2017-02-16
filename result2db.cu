@@ -6,18 +6,14 @@
 #include "struct.h"
 #include "makros.h"
 
-char query[200];
-
 // Load sqlite database table kinetics to record in memory
 int result2db(char *db_name, result_record *result_table, int result_len) {
-    // // // ----------------------- SQLITE VARIABLES
+    // ----------------------- SQLITE VARIABLES
     int retval = 0;                // Create an int variable for storing the return code for each call
-    char query[500];           // holder for sql queries
-    // // int seq_id = 0;            // seq_id is the last entry value in 'event' table
-    // // sqlite3_stmt *stmt;        // A prepered statement for fetching tables
-    //
+    char query[500];               // holder for sql queries
+
     sqlite3 *conn;
-    sqlite3_stmt *res = NULL;
+    //sqlite3_stmt *res = NULL;
     int error = 0;
     //const char *errMSG;
     //const char *tail;
@@ -45,12 +41,12 @@ int result2db(char *db_name, result_record *result_table, int result_len) {
         exit(0);
     }
 
-    printf("seq_id, mfv, rho\n");
+    //printf("seq_id, mfv, rho\n");
     for (int i=0; i<result_len; i++ ) {
         int seq_id = result_table[i].seq_id;
         float mfv  = result_table[i].mfv;
         float rho  = result_table[i].rho;
-        printf("%i, %f, %f\n",seq_id, mfv, rho);
+        //printf("%i, %f, %f\n",seq_id, mfv, rho);
 
         sprintf(query, "UPDATE kinetics SET mfv=%f, heading=%f WHERE seq_id = %i", mfv, rho, seq_id);
         retval = sqlite3_exec(conn, query ,0, 0, 0);
@@ -62,10 +58,6 @@ int result2db(char *db_name, result_record *result_table, int result_len) {
 
     sqlite3_exec(conn, "COMMIT TRANSACTION", NULL, NULL, NULL);
     sqlite3_close(conn);                  // Close the DB handle to free memory
-
-    // sqlite3_finalize(res);
-    //
-    // sqlite3_close(conn);
 
     return 0;
 }

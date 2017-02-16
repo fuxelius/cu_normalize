@@ -79,7 +79,7 @@ __global__ void sum_vector_eval(int meta_idx, chunk_record *chunk_table, int chu
         // if approximation is better update chunk_table[chunk_idx]
         if (lsq < chunk_table[chunk_idx].lsq) {
 
-            printf("----->Updated meta_idx=%i chunk_idx=%i old_lsq=%f new_lsq=%f\n", meta_idx, chunk_idx, chunk_table[chunk_idx].lsq, lsq);
+            //printf("----->Updated meta_idx=%i chunk_idx=%i old_lsq=%f new_lsq=%f\n", meta_idx, chunk_idx, chunk_table[chunk_idx].lsq, lsq);
 
             chunk_table[chunk_idx].x0           = chunk_table[chunk_idx].x0 * rand_table[0];
             chunk_table[chunk_idx].y0           = chunk_table[chunk_idx].y0 * rand_table[1];
@@ -108,7 +108,7 @@ __global__ void point_square(chunk_record *chunk_table, int chunk_len, mag_recor
 
     // cut out all other created threads based on threadIdx.x, otherwise they WILL write out of bound -- and krashes :(
     if (!mag_table[error_idx].disable && mag_idx < mag_len && chunk_idx < chunk_len && error_idx < META_SIZE*chunk_size) {
-      
+
         // mag_table
         short mxt = mag_table[mag_idx].mxt;
         short myt = mag_table[mag_idx].myt;
@@ -197,24 +197,33 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 
     // setup seeds
     setup_kernel<<<1,N>>>(devStates, clock64());
+
+    cudaDeviceSynchronize();
+
     // ------------------------------------------------------------------------------------------
 
+    dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1); // outside loop
 
-    int max_iter = 20000; // Maximum iteration depth 100,000
+    int max_iter = 600; // 600 is optimal; tested 20, 200, 2000 and 20000
 
     for (int meta_idx=0; meta_idx<meta_len; meta_idx++) {
 
-        initialize_rand_table();                            // all values set to 1.00
+        initialize_rand_table();                            // Set all values set to 1.00
 
-        for (int round=0; round<max_iter; round++) {        // iterate 100.000 times
+        for (int round=0; round<max_iter; round++) {        // iterate max_iter times
             //printf("meta_idx=%i, round=%i\n", meta_idx, round);
 
-            dim3 grid((META_SIZE * CHUNK_SIZE + BLOCK_SIZE - 1)/ BLOCK_SIZE, 1);
             point_square<<<grid,BLOCK_SIZE>>>(chunk_table, chunk_len, mag_table, mag_len, CHUNK_SIZE, meta_idx);
+
+            cudaDeviceSynchronize();
 
             sum_vector_eval<<<1,META_SIZE>>>(meta_idx, chunk_table, chunk_len, CHUNK_SIZE); // summera alla paralellt och uppdatera chunk
 
+            cudaDeviceSynchronize();
+
             generate_rand<<<1,N>>>(devStates); // generate random numbers
+
+            cudaDeviceSynchronize();
 
             // printf("random=%f\n", rand_table[0]);
             // printf("random=%f\n", rand_table[1]);

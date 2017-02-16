@@ -218,7 +218,7 @@ int x0y0_histogram(chunk_record *chunk_table, int chunk_len, int bin, int range,
 
     printf("y_limit=<%f,%f>\n\n", y0_boundry_low, y0_boundry_high);
 
-    printf("x0,y0\n");
+    //printf("x0,y0\n");
 
     // 1) loop throught mxt,myt and set the outliers in mag_table->outlier
     //for (int mag_idx = chunk_table[left_chunk_idx].left_mag_idx; mag_idx <= chunk_table[right_chunk_idx].right_mag_idx; mag_idx++)
@@ -232,7 +232,7 @@ int x0y0_histogram(chunk_record *chunk_table, int chunk_len, int bin, int range,
             chunk_table[chunk_idx].outlier = 1; // Set outlier true
         }
         else {
-            printf("%f,%f\n", x0, y0);
+            //printf("%f,%f\n", x0, y0);
             chunk_table[chunk_idx].outlier = 0; // Set outlier false
         }
     }

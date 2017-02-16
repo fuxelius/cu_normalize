@@ -186,10 +186,10 @@ int main(int argc, char *argv[]) {
     //   printf("iter_cnt \t%f\n\n", chunk_table[i].iter_cnt);
     // }
 
-    printf("chunk_idx, x0, y0\n");
-    for (int i=0; i<chunk_len; i++) {
-      printf("%i, %f, %f\n", i, chunk_table[i].x0, chunk_table[i].y0);
-    }
+    // printf("chunk_idx, x0, y0\n");
+    // for (int i=0; i<chunk_len; i++) {
+    //   printf("%i, %f, %f\n", i, chunk_table[i].x0, chunk_table[i].y0);
+    // }
 
 
     // ============================================ X0Y0 HISTOGRAM ============================================
@@ -228,12 +228,12 @@ int main(int argc, char *argv[]) {
 
     cudaMemcpy(result_table, d_result_table, result_bytes, cudaMemcpyDeviceToHost); // Get it back here, NOW!!!!
 
-    printf("mfv, rho\n");
-    for (int i=0; i<mag_len; i++ ) {
-        float mfv = result_table[i].mfv;
-        float rho = result_table[i].rho;
-        printf("%f, %f\n", mfv, rho);
-    }
+    // printf("mfv, rho\n");
+    // for (int i=0; i<mag_len; i++ ) {
+    //     float mfv = result_table[i].mfv;
+    //     float rho = result_table[i].rho;
+    //     printf("%f, %f\n", mfv, rho);
+    // }
 
 
 
