@@ -246,7 +246,7 @@ __global__ void cuda_main(chunk_record *chunk_table, int chunk_len, mag_record *
 // ========================================================== HOST LAUNCH ==================================================================
 void host_launch(chunk_record *chunk_table, int chunk_len, mag_record *mag_table, int mag_len, meta_record *meta_table, int meta_len) {
     //cudaDeviceSetLimit(cudaLimitDevRuntimeSyncDepth, 4);
-    //cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 32768);
+    cudaDeviceSetLimit(cudaLimitDevRuntimePendingLaunchCount, 32768);
 
     printf("Host Launch:\n");
 
