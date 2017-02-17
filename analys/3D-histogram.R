@@ -8,6 +8,9 @@ library(plot3D)
 x <- apa$x
 y <- apa$y
 
+#x <- cos(data$heading)*data$mfv
+#y <- sin(data$heading)*data$mfv
+
 ##  Create cuts:
 x_c <- cut(x, 30)
 y_c <- cut(y, 30)
