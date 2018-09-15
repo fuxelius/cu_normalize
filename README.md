@@ -1,2 +1,2 @@
 # cu_normalize
-cuda-c: Fast rectangular to polar normalization of massive datasets of projected magnetometer values
+CUDA-C: Blazingly fast rectangular to polar normalization of massive datasets of projected magnetometer values
