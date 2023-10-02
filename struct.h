@@ -1,3 +1,13 @@
+/*
+ *     struct.h
+ * 
+ *          Description:  Rectangular to polar normalization, in CUDA-C
+ *          Author:       Hans-Henrik Fuxelius
+ *          Date:         Uppsala, 2017-02-17
+ *          License:      MIT
+ *          Version:      1.0
+ */
+
 #define BLOCK_SIZE 256      // IE CUDA block size
 #define CHUNK_SIZE 1024     // HAS TO BE A **MULTIPLE** OF BLOCK_SIZE; how many magvalues to minimize in each step;
 #define META_SIZE 100        // default=100 how many chunks to handle each time on the devie (constant memory)
