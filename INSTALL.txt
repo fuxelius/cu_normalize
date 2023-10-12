@@ -1,6 +1,0 @@
-* Install and compile
-sudo apt-get install libsqlite3-dev
-make
-
-./normalize ga_uppsala_2.sqlite3
-
